@@ -34,7 +34,7 @@ public static class WidgetNotificationService
                 var currentCategory = WidgetSettings.GetSelectedCategory();
                 var layoutMode = WidgetSettings.GetLayoutMode();
                 var paginationStyle = WidgetSettings.GetPaginationStyle();
-                var cardJson = WidgetCardBuilder.BuildCard(sizeStr, widgetCommands, "就绪", currentMode, currentCategory, layoutMode, paginationStyle, pageIndex: 0, categoryPageIndex: 0);
+                var cardJson = WidgetCardBuilder.BuildCard(sizeStr, widgetCommands, I18nService.Instance["Commands.StatusReady"], currentMode, currentCategory, layoutMode, paginationStyle, pageIndex: 0, categoryPageIndex: 0);
 
                 var options = new WidgetUpdateRequestOptions(context.Id)
                 {

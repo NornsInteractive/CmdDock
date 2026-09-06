@@ -19,7 +19,15 @@ public class I18nService
 
     public string CurrentLanguage
     {
-        get => _currentConfigLanguage;
+        get
+        {
+            var diskVal = AppSettingsService.GetLanguage();
+            if (!string.IsNullOrEmpty(diskVal))
+            {
+                _currentConfigLanguage = diskVal;
+            }
+            return _currentConfigLanguage;
+        }
         set
         {
             if (_currentConfigLanguage != value)
@@ -35,11 +43,12 @@ public class I18nService
     {
         get
         {
-            if (_currentConfigLanguage == AppSettingsService.LanguageChinese)
+            var config = CurrentLanguage;
+            if (config == AppSettingsService.LanguageChinese)
             {
                 return AppSettingsService.LanguageChinese;
             }
-            if (_currentConfigLanguage == AppSettingsService.LanguageEnglish)
+            if (config == AppSettingsService.LanguageEnglish)
             {
                 return AppSettingsService.LanguageEnglish;
             }
@@ -149,12 +158,19 @@ public class I18nService
 
         // Categories
         ["Category.全部"] = "全部",
+        ["Category.All"] = "全部",
         ["Category.常用"] = "常用",
+        ["Category.Common"] = "常用",
         ["Category.系统"] = "系统",
+        ["Category.System"] = "系统",
         ["Category.网络"] = "网络",
+        ["Category.Network"] = "网络",
         ["Category.开发"] = "开发",
+        ["Category.Development"] = "开发",
         ["Category.运维"] = "运维",
+        ["Category.DevOps"] = "运维",
         ["Category.工具"] = "工具",
+        ["Category.Tools"] = "工具",
 
         // ShellType & ExecutionMode
         ["ShellType.PowerShell"] = "PowerShell",
@@ -318,6 +334,13 @@ public class I18nService
         ["Widget.ConfirmExecuting"] = "⏳ 正在执行: {0}",
         ["Widget.ExecSuccess"] = "✓ {0} 成功 ({1}ms)",
         ["Widget.ExecFailed"] = "✗ {0} 失败 (代码 {1})",
+        ["Widget.ToggleToGrid"] = "切换网格视图",
+        ["Widget.ToggleToList"] = "切换列表视图",
+        ["Widget.EmptyCommands"] = "暂无快捷命令",
+        ["Widget.EmptyWidgetCommands"] = "暂无已开启的小组件命令",
+        ["Widget.EmptyCategory"] = "「{0}」分类下暂无快捷命令",
+        ["Widget.ManageTooltip"] = "管理面板",
+        ["Widget.PageFormat"] = "第 {0} / {1} 页",
 
         // Settings Page
         ["Settings.Title"] = "设置",
@@ -486,12 +509,19 @@ public class I18nService
 
         // Categories
         ["Category.全部"] = "All",
+        ["Category.All"] = "All",
         ["Category.常用"] = "Common",
+        ["Category.Common"] = "Common",
         ["Category.系统"] = "System",
+        ["Category.System"] = "System",
         ["Category.网络"] = "Network",
+        ["Category.Network"] = "Network",
         ["Category.开发"] = "Development",
+        ["Category.Development"] = "Development",
         ["Category.运维"] = "DevOps",
+        ["Category.DevOps"] = "DevOps",
         ["Category.工具"] = "Tools",
+        ["Category.Tools"] = "Tools",
 
         // ShellType & ExecutionMode
         ["ShellType.PowerShell"] = "PowerShell",
@@ -655,6 +685,13 @@ public class I18nService
         ["Widget.ConfirmExecuting"] = "⏳ Executing: {0}",
         ["Widget.ExecSuccess"] = "✓ {0} Success ({1}ms)",
         ["Widget.ExecFailed"] = "✗ {0} Failed (Code {1})",
+        ["Widget.ToggleToGrid"] = "Switch to Grid View",
+        ["Widget.ToggleToList"] = "Switch to List View",
+        ["Widget.EmptyCommands"] = "No quick commands",
+        ["Widget.EmptyWidgetCommands"] = "No commands enabled for widget",
+        ["Widget.EmptyCategory"] = "No commands in '{0}'",
+        ["Widget.ManageTooltip"] = "Manage Dock",
+        ["Widget.PageFormat"] = "Page {0} of {1}",
 
         // Settings Page
         ["Settings.Title"] = "Settings",

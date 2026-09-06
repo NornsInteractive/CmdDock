@@ -579,6 +579,7 @@ public sealed partial class MainPage : Page
         if (LanguageSettingCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
         {
             I18nService.Instance.CurrentLanguage = tag;
+            WidgetNotificationService.NotifyWidgets(ViewModel.Commands);
         }
     }
 

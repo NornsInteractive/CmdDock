@@ -53,7 +53,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
                     Directory.CreateDirectory(dir);
                 }
 
-                _fileWatcher = new FileSystemWatcher(dir, Path.GetFileName(AppPaths.CommandsFilePath))
+                _fileWatcher = new FileSystemWatcher(dir, "*.json")
                 {
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size
                 };
@@ -75,11 +75,11 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
         _debounceTimer?.Dispose();
         _debounceTimer = new System.Threading.Timer(_ =>
         {
-            UpdateAllActiveWidgets("就绪");
+            UpdateAllActiveWidgets();
         }, null, 150, Timeout.Infinite);
     }
 
-    public static void UpdateAllActiveWidgets(string statusMessage = "就绪")
+    public static void UpdateAllActiveWidgets(string? statusMessage = null)
     {
         List<CompactWidgetContext> list;
         lock (SyncRoot)
@@ -87,10 +87,11 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
             list = ActiveWidgets.Values.ToList();
         }
 
+        var status = statusMessage ?? I18nService.Instance["Commands.StatusReady"];
         var savedMode = WidgetSettings.GetViewMode();
         foreach (var ctx in list)
         {
-            UpdateWidgetUI(ctx.WidgetId, ctx.Size, statusMessage, savedMode);
+            UpdateWidgetUI(ctx.WidgetId, ctx.Size, status, savedMode);
         }
     }
 
@@ -113,7 +114,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
             EmptyWidgetListEvent.Reset();
         }
 
-        UpdateWidgetUI(id, widgetContext.Size, "就绪", mode);
+        UpdateWidgetUI(id, widgetContext.Size, I18nService.Instance["Commands.StatusReady"], mode);
     }
 
     public void Activate(WidgetContext widgetContext)
@@ -140,7 +141,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
             }
         }
 
-        UpdateWidgetUI(widgetContext.Id, widgetContext.Size, "就绪", mode);
+        UpdateWidgetUI(widgetContext.Id, widgetContext.Size, I18nService.Instance["Commands.StatusReady"], mode);
     }
 
     public void Deactivate(string widgetId)
@@ -191,7 +192,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
             }
         }
 
-        UpdateWidgetUI(widgetContext.Id, widgetContext.Size, "就绪", mode);
+        UpdateWidgetUI(widgetContext.Id, widgetContext.Size, I18nService.Instance["Commands.StatusReady"], mode);
     }
 
     public async void OnActionInvoked(WidgetActionInvokedArgs actionInvokedArgs)
@@ -255,7 +256,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
                 }
             }
 
-            UpdateWidgetUI(widgetId, size, "就绪", newMode);
+            UpdateWidgetUI(widgetId, size, null, newMode);
             return;
         }
 
@@ -284,7 +285,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
                 }
             }
 
-            UpdateWidgetUI(widgetId, size, "就绪");
+            UpdateWidgetUI(widgetId, size);
             return;
         }
 
@@ -313,7 +314,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
                 }
             }
 
-            UpdateWidgetUI(widgetId, size, "就绪");
+            UpdateWidgetUI(widgetId, size);
             return;
         }
 
@@ -345,7 +346,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
 
             WidgetSettings.SetSelectedCategory(selectedCat);
             string currentMode = WidgetSettings.GetViewMode();
-            UpdateWidgetUI(widgetId, size, "就绪", currentMode, selectedCat);
+            UpdateWidgetUI(widgetId, size, null, currentMode, selectedCat);
             return;
         }
 
@@ -470,9 +471,10 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
         LaunchCompanionApp();
     }
 
-    private static async void UpdateWidgetUI(string widgetId, WidgetSize size, string statusMessage, string? viewMode = null, string? selectedCategory = null, string? confirmingCommandId = null)
+    private static async void UpdateWidgetUI(string widgetId, WidgetSize size, string? statusMessage = null, string? viewMode = null, string? selectedCategory = null, string? confirmingCommandId = null)
     {
-        Program.Log($"[WidgetProvider] UpdateWidgetUI: widgetId={widgetId}, size={size}, status={statusMessage}");
+        var effectiveStatus = statusMessage ?? I18nService.Instance["Commands.StatusReady"];
+        Program.Log($"[WidgetProvider] UpdateWidgetUI: widgetId={widgetId}, size={size}, status={effectiveStatus}");
         try
         {
             var commands = await _commandService.GetWidgetCommandsAsync();
@@ -512,7 +514,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
             var cardJson = WidgetCardBuilder.BuildCard(
                 sizeStr, 
                 commands, 
-                statusMessage, 
+                effectiveStatus, 
                 currentViewMode, 
                 currentCategory, 
                 layoutMode, 

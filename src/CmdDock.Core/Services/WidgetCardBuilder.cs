@@ -173,10 +173,21 @@ public static class WidgetCardBuilder
             return card.ToJsonString(JsonOptions);
         }
 
+        var effectiveStatusMessage = (!string.IsNullOrWhiteSpace(statusMessage) && statusMessage != "就绪")
+            ? statusMessage
+            : I18nService.Instance["Commands.StatusReady"];
+
         // Filter commands by selected category
-        var activeCommands = (string.IsNullOrWhiteSpace(selectedCategory) || selectedCategory == "全部")
+        var isAllCategory = string.IsNullOrWhiteSpace(selectedCategory)
+            || string.Equals(selectedCategory, "全部", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(selectedCategory, "All", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(selectedCategory, I18nService.Instance["Category.全部"], StringComparison.OrdinalIgnoreCase);
+
+        var activeCommands = isAllCategory
             ? commands
-            : commands.Where(c => string.Equals(c.Group, selectedCategory, StringComparison.OrdinalIgnoreCase)).ToList();
+            : commands.Where(c => string.Equals(c.Group, selectedCategory, StringComparison.OrdinalIgnoreCase)
+                               || string.Equals(c.DisplayGroup, selectedCategory, StringComparison.OrdinalIgnoreCase)
+                               || string.Equals(I18nService.Instance.TranslateCategory(c.Group), selectedCategory, StringComparison.OrdinalIgnoreCase)).ToList();
 
         // Pagination calculation
         int pageSize = WidgetSettings.GetPageSize(effectiveLayout, size, viewMode);
@@ -193,7 +204,9 @@ public static class WidgetCardBuilder
 
         // Reusable Actions
         var toggleDataUri = WidgetIconService.GetToggleIconDataUri(viewMode);
-        var toggleTooltip = viewMode == "list" ? "切换网格视图" : "切换列表视图";
+        var toggleTooltip = viewMode == "list" 
+            ? I18nService.Instance["Widget.ToggleToGrid"] 
+            : I18nService.Instance["Widget.ToggleToList"];
         JsonObject CreateToggleAction() => new()
         {
             ["type"] = "Action.Execute",
@@ -206,11 +219,12 @@ public static class WidgetCardBuilder
         };
 
         var settingsDataUri = WidgetIconService.GetSettingsIconDataUri();
+        var manageTooltip = I18nService.Instance["Widget.ManageTooltip"];
         JsonObject CreateManageAction() => new()
         {
             ["type"] = "Action.Execute",
             ["verb"] = "openApp",
-            ["tooltip"] = "管理面板"
+            ["tooltip"] = manageTooltip
         };
 
         // Render based on selected layout mode (SidebarRail or DropdownTop)
@@ -218,7 +232,7 @@ public static class WidgetCardBuilder
         {
             case WidgetSettings.LayoutDropdown:
                 BuildDropdownTopLayout(body, size, availableCategories, categoryIconMap,
-                    selectedCategory, pagedCommands, totalCommands, viewMode, statusMessage,
+                    selectedCategory, pagedCommands, totalCommands, viewMode, effectiveStatusMessage,
                     effectivePagination, currentPage, totalPages, CreateToggleAction, toggleDataUri, toggleTooltip,
                     CreateManageAction, settingsDataUri);
                 break;
@@ -226,7 +240,7 @@ public static class WidgetCardBuilder
             case WidgetSettings.LayoutSidebar:
             default:
                 BuildSidebarRailLayout(body, size, availableCategories, pagedCategories, currentCatPage, totalCatPages,
-                    categoryIconMap, selectedCategory, pagedCommands, totalCommands, viewMode, statusMessage,
+                    categoryIconMap, selectedCategory, pagedCommands, totalCommands, viewMode, effectiveStatusMessage,
                     effectivePagination, currentPage, totalPages, CreateToggleAction, toggleDataUri, toggleTooltip,
                     CreateManageAction, settingsDataUri);
                 break;
@@ -455,7 +469,7 @@ public static class WidgetCardBuilder
             body.Add(new JsonObject
             {
                 ["type"] = "TextBlock",
-                ["text"] = "暂无快捷命令",
+                ["text"] = I18nService.Instance["Widget.EmptyCommands"],
                 ["isSubtle"] = true,
                 ["horizontalAlignment"] = "Center",
                 ["verticalAlignment"] = "Center"
@@ -551,7 +565,7 @@ public static class WidgetCardBuilder
         var titleBlock = new JsonObject
         {
             ["type"] = "TextBlock",
-            ["text"] = cmd.Name,
+            ["text"] = cmd.DisplayName,
             ["weight"] = "Bolder",
             ["size"] = "Small",
             ["verticalAlignment"] = "Center",
@@ -603,8 +617,9 @@ public static class WidgetCardBuilder
         Func<JsonObject> createToggleAction, string toggleUri, string toggleTooltip,
         Func<JsonObject> createManageAction, string manageUri)
     {
-        var currentCatDisplay = string.IsNullOrWhiteSpace(selectedCat) ? "全部" : selectedCat;
-        var currentIconUri = WidgetIconService.GetCategoryIconDataUri(iconMap.GetValueOrDefault(currentCatDisplay, "E8EC"), 14);
+        var currentCatRaw = string.IsNullOrWhiteSpace(selectedCat) ? "全部" : selectedCat;
+        var currentCatDisplay = I18nService.Instance.TranslateCategory(currentCatRaw);
+        var currentIconUri = WidgetIconService.GetCategoryIconDataUri(iconMap.GetValueOrDefault(currentCatRaw, "E8EC"), 14);
         var chevronUri = WidgetIconService.GetDropdownChevronIconDataUri(10);
 
         var dropdownTrigger = new JsonObject
@@ -740,7 +755,7 @@ public static class WidgetCardBuilder
                     ["url"] = manageUri,
                     ["width"] = "20px",
                     ["height"] = "20px",
-                    ["altText"] = "管理面板",
+                    ["altText"] = I18nService.Instance["Widget.ManageTooltip"],
                     ["selectAction"] = createManageAction()
                 }
             }
@@ -810,7 +825,8 @@ public static class WidgetCardBuilder
 
     private static JsonObject CreateCategoryMenuItem(string cat, string selectedCat, Dictionary<string, string> iconMap)
     {
-        bool isSelected = string.Equals(cat, selectedCat, StringComparison.OrdinalIgnoreCase);
+        bool isSelected = string.Equals(cat, selectedCat, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(I18nService.Instance.TranslateCategory(cat), selectedCat, StringComparison.OrdinalIgnoreCase);
         var iconUri = WidgetIconService.GetCategoryIconDataUri(iconMap.GetValueOrDefault(cat, "E8EC"), 14);
 
         var item = new JsonObject
@@ -863,7 +879,7 @@ public static class WidgetCardBuilder
                                 new JsonObject
                                 {
                                     ["type"] = "TextBlock",
-                                    ["text"] = cat,
+                                    ["text"] = I18nService.Instance.TranslateCategory(cat),
                                     ["size"] = "Small",
                                     ["weight"] = isSelected ? "Bolder" : "Default",
                                     ["color"] = isSelected ? "Accent" : "Default",
@@ -944,7 +960,7 @@ public static class WidgetCardBuilder
                         ["url"] = manageUri,
                         ["width"] = "20px",
                         ["height"] = "20px",
-                        ["altText"] = "管理面板",
+                        ["altText"] = I18nService.Instance["Widget.ManageTooltip"],
                         ["selectAction"] = createManageAction()
                     }
                 }
@@ -996,7 +1012,7 @@ public static class WidgetCardBuilder
                         new JsonObject
                         {
                             ["type"] = "TextBlock",
-                            ["text"] = selectedCat,
+                            ["text"] = I18nService.Instance.TranslateCategory(selectedCat),
                             ["size"] = "Small",
                             ["weight"] = "Bolder",
                             ["isSubtle"] = true,
@@ -1100,7 +1116,7 @@ public static class WidgetCardBuilder
                     new JsonObject
                     {
                         ["type"] = "TextBlock",
-                        ["text"] = $"★ {selectedCat}",
+                        ["text"] = $"★ {I18nService.Instance.TranslateCategory(selectedCat)}",
                         ["size"] = "Small",
                         ["weight"] = "Bolder",
                         ["color"] = "Light",
@@ -1157,7 +1173,7 @@ public static class WidgetCardBuilder
                     ["url"] = manageUri,
                     ["width"] = "18px",
                     ["height"] = "18px",
-                    ["altText"] = "管理面板",
+                    ["altText"] = I18nService.Instance["Widget.ManageTooltip"],
                     ["selectAction"] = createManageAction()
                 }
             }
@@ -1267,7 +1283,7 @@ public static class WidgetCardBuilder
                     ["url"] = manageUri,
                     ["width"] = "20px",
                     ["height"] = "20px",
-                    ["altText"] = "管理面板",
+                    ["altText"] = I18nService.Instance["Widget.ManageTooltip"],
                     ["selectAction"] = createManageAction()
                 }
             }
@@ -1286,7 +1302,7 @@ public static class WidgetCardBuilder
             body.Add(new JsonObject
             {
                 ["type"] = "TextBlock",
-                ["text"] = "暂无快捷命令",
+                ["text"] = I18nService.Instance["Widget.EmptyCommands"],
                 ["isSubtle"] = true,
                 ["horizontalAlignment"] = "Center",
                 ["spacing"] = "Medium"
@@ -1341,7 +1357,8 @@ public static class WidgetCardBuilder
 
     private static JsonObject BuildHorizontalCategoryPill(string cat, string selectedCat, Dictionary<string, string> iconMap)
     {
-        bool isSelected = string.Equals(cat, selectedCat, StringComparison.OrdinalIgnoreCase);
+        bool isSelected = string.Equals(cat, selectedCat, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(I18nService.Instance.TranslateCategory(cat), selectedCat, StringComparison.OrdinalIgnoreCase);
 
         iconMap.TryGetValue(cat, out var catIconGlyph);
         var catIconDataUri = WidgetIconService.GetCategoryIconDataUri(catIconGlyph, size: 14);
@@ -1375,7 +1392,7 @@ public static class WidgetCardBuilder
                     new JsonObject
                     {
                         ["type"] = "TextBlock",
-                        ["text"] = cat,
+                        ["text"] = I18nService.Instance.TranslateCategory(cat),
                         ["size"] = "Small",
                         ["weight"] = isSelected ? "Bolder" : "Normal",
                         ["color"] = isSelected ? "Light" : null,
@@ -1491,7 +1508,8 @@ public static class WidgetCardBuilder
 
     private static JsonObject BuildVerticalCategoryItem(string cat, string selectedCat, Dictionary<string, string> iconMap, bool isSmall)
     {
-        bool isSelected = string.Equals(cat, selectedCat, StringComparison.OrdinalIgnoreCase);
+        bool isSelected = string.Equals(cat, selectedCat, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(I18nService.Instance.TranslateCategory(cat), selectedCat, StringComparison.OrdinalIgnoreCase);
 
         iconMap.TryGetValue(cat, out var catIconGlyph);
         var catIconDataUri = WidgetIconService.GetCategoryIconDataUri(catIconGlyph, size: 14);
@@ -1530,7 +1548,7 @@ public static class WidgetCardBuilder
                     new JsonObject
                     {
                         ["type"] = "TextBlock",
-                        ["text"] = cat,
+                        ["text"] = I18nService.Instance.TranslateCategory(cat),
                         ["size"] = "Small",
                         ["weight"] = isSelected ? "Bolder" : "Normal",
                         ["color"] = isSelected ? "Light" : null,
@@ -1663,7 +1681,7 @@ public static class WidgetCardBuilder
             targetContainer.Add(new JsonObject
             {
                 ["type"] = "TextBlock",
-                ["text"] = "暂无已开启的小组件命令",
+                ["text"] = I18nService.Instance["Widget.EmptyWidgetCommands"],
                 ["isSubtle"] = true,
                 ["horizontalAlignment"] = "Center",
                 ["spacing"] = "Medium"
@@ -1671,6 +1689,7 @@ public static class WidgetCardBuilder
         }
         else if (commands.Count == 0)
         {
+            var catDisplay = I18nService.Instance.TranslateCategory(selectedCat);
             targetContainer.Add(new JsonObject
             {
                 ["type"] = "Container",
@@ -1681,7 +1700,7 @@ public static class WidgetCardBuilder
                     new JsonObject
                     {
                         ["type"] = "TextBlock",
-                        ["text"] = $"「{selectedCat}」分类下暂无快捷命令",
+                        ["text"] = string.Format(I18nService.Instance["Widget.EmptyCategory"], catDisplay),
                         ["isSubtle"] = true,
                         ["horizontalAlignment"] = "Center",
                         ["size"] = "Small"
@@ -1835,9 +1854,9 @@ public static class WidgetCardBuilder
                 new JsonObject
                 {
                     ["type"] = "TextBlock",
-                    ["text"] = !string.IsNullOrWhiteSpace(statusMsg) && statusMsg != "就绪"
+                    ["text"] = !string.IsNullOrWhiteSpace(statusMsg) && statusMsg != "就绪" && statusMsg != I18nService.Instance["Commands.StatusReady"]
                         ? statusMsg
-                        : $"第 {currentPage + 1} / {totalPages} 页",
+                        : string.Format(I18nService.Instance["Widget.PageFormat"], currentPage + 1, totalPages),
                     ["size"] = "Small",
                     ["isSubtle"] = true,
                     ["verticalAlignment"] = "Center"
@@ -1931,7 +1950,7 @@ public static class WidgetCardBuilder
                 new JsonObject
                 {
                     ["type"] = "TextBlock",
-                    ["text"] = cmd.Name,
+                    ["text"] = cmd.DisplayName,
                     ["size"] = "Small",
                     ["horizontalAlignment"] = "Center",
                     ["textTrimming"] = "CharacterEllipsis"
@@ -1996,7 +2015,7 @@ public static class WidgetCardBuilder
         var titleBlock = new JsonObject
         {
             ["type"] = "TextBlock",
-            ["text"] = cmd.Name,
+            ["text"] = cmd.DisplayName,
             ["weight"] = isGrid ? "Bolder" : "Default",
             ["size"] = isGrid ? "Small" : "Default",
             ["verticalAlignment"] = "Center",
@@ -2047,7 +2066,7 @@ public static class WidgetCardBuilder
         var action = new JsonObject
         {
             ["type"] = "Action.Execute",
-            ["title"] = cmd.Name,
+            ["title"] = cmd.DisplayName,
             ["verb"] = "runCommand",
             ["data"] = new JsonObject
             {
@@ -2062,23 +2081,36 @@ public static class WidgetCardBuilder
 
     public static string GetTemplateForSize(string widgetSize)
     {
-        return widgetSize.ToLowerInvariant() switch
+        var rawTemplate = widgetSize.ToLowerInvariant() switch
         {
             "small" => SmallTemplate,
             "large" => LargeTemplate,
             _ => MediumTemplate // Default to Medium
         };
+
+        var appTitle = I18nService.Instance["App.ShortTitle"];
+        var manageText = I18nService.Instance["Widget.ManageTooltip"];
+
+        return rawTemplate
+            .Replace("CmdDock 快捷命令", appTitle)
+            .Replace("CmdDock 快捷启动坞", appTitle)
+            .Replace("\"title\": \"管理\"", $"\"title\": \"{manageText}\"")
+            .Replace("\"title\": \"管理面板\"", $"\"title\": \"{manageText}\"");
     }
 
     public static string BuildDataPayload(IReadOnlyList<CommandItem> commands, string statusMessage = "就绪")
     {
+        var effectiveStatus = (!string.IsNullOrWhiteSpace(statusMessage) && statusMessage != "就绪")
+            ? statusMessage
+            : I18nService.Instance["Commands.StatusReady"];
+
         var items = commands.Select(c => new
         {
             id = c.Id,
-            name = c.Name,
-            description = c.Description,
+            name = c.DisplayName,
+            description = c.DisplayDescription,
             icon = c.DisplayIcon,
-            group = c.Group,
+            group = c.DisplayGroup,
             status = c.LastRunStatus.ToString(),
             lastRun = c.FormattedLastRun,
             duration = c.FormattedDuration
@@ -2086,7 +2118,7 @@ public static class WidgetCardBuilder
 
         var payload = new
         {
-            statusText = statusMessage,
+            statusText = effectiveStatus,
             commandCount = items.Count,
             commands = items
         };
