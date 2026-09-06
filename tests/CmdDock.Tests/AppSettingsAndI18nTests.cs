@@ -192,5 +192,44 @@ public class AppSettingsAndI18nTests
             service.CurrentLanguage = original;
         }
     }
+
+    [Fact]
+    public void I18nService_PrivacyKeys_ShouldReturnValidBilingualContent()
+    {
+        var service = I18nService.Instance;
+        var original = service.CurrentLanguage;
+        try
+        {
+            // Chinese
+            service.CurrentLanguage = AppSettingsService.LanguageChinese;
+            Assert.Equal("隐私政策与数据安全声明", service["Settings.PrivacyCardTitle"]);
+            Assert.Contains("遵循纯本地运行安全原则", service["Settings.PrivacyCardSubtitle"]);
+            Assert.Equal("🛡️ 零数据收集", service["Settings.PrivacyPoint1Title"]);
+            Assert.Equal("💾 100% 本地存储", service["Settings.PrivacyPoint2Title"]);
+            Assert.Equal("🚫 无遥测与追踪", service["Settings.PrivacyPoint3Title"]);
+            Assert.Equal("⚡ 权限与命令受控", service["Settings.PrivacyPoint4Title"]);
+            Assert.Equal("🗑️ 卸载彻底清除", service["Settings.PrivacyPoint5Title"]);
+            Assert.Equal("展开查看完整条款细则", service["Settings.PrivacyToggleExpand"]);
+            Assert.Equal("收起完整条款细则", service["Settings.PrivacyToggleCollapse"]);
+            Assert.Contains("数据收集与使用", service["Privacy.FullText"]);
+
+            // English
+            service.CurrentLanguage = AppSettingsService.LanguageEnglish;
+            Assert.Equal("Privacy Policy & Data Security", service["Settings.PrivacyCardTitle"]);
+            Assert.Contains("CmdDock operates strictly on your local device", service["Settings.PrivacyCardSubtitle"]);
+            Assert.Equal("🛡️ Zero Data Collection", service["Settings.PrivacyPoint1Title"]);
+            Assert.Equal("💾 100% Local Storage", service["Settings.PrivacyPoint2Title"]);
+            Assert.Equal("🚫 Zero Telemetry & Tracking", service["Settings.PrivacyPoint3Title"]);
+            Assert.Equal("⚡ Controlled Execution", service["Settings.PrivacyPoint4Title"]);
+            Assert.Equal("🗑️ Clean Removal", service["Settings.PrivacyPoint5Title"]);
+            Assert.Equal("Expand Full Legal Policy", service["Settings.PrivacyToggleExpand"]);
+            Assert.Equal("Collapse Full Legal Policy", service["Settings.PrivacyToggleCollapse"]);
+            Assert.Contains("Data Collection and Usage", service["Privacy.FullText"]);
+        }
+        finally
+        {
+            service.CurrentLanguage = original;
+        }
+    }
 }
 
