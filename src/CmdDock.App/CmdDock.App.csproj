@@ -69,16 +69,16 @@
     <ItemGroup>
       <WidgetOutputs Condition="Exists('..\CmdDock.Widget\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\win-x64\CmdDock.Widget.dll')"
                      Include="..\CmdDock.Widget\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\win-x64\**\*.*"
-                     Exclude="..\CmdDock.Widget\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\win-x64\publish\**\*.*" />
+                     Exclude="..\CmdDock.Widget\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\win-x64\publish\**\*.*;..\CmdDock.Widget\**\CmdDock.Core.*" />
       <WidgetOutputs Condition="'@(WidgetOutputs)' == '' and Exists('..\CmdDock.Widget\bin\$(Configuration)\net8.0-windows10.0.26100.0\win-x64\CmdDock.Widget.dll')"
                      Include="..\CmdDock.Widget\bin\$(Configuration)\net8.0-windows10.0.26100.0\win-x64\**\*.*"
-                     Exclude="..\CmdDock.Widget\bin\$(Configuration)\net8.0-windows10.0.26100.0\win-x64\publish\**\*.*" />
+                     Exclude="..\CmdDock.Widget\bin\$(Configuration)\net8.0-windows10.0.26100.0\win-x64\publish\**\*.*;..\CmdDock.Widget\**\CmdDock.Core.*" />
       <WidgetOutputs Condition="'@(WidgetOutputs)' == ''"
                      Include="..\CmdDock.Widget\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\**\*.*"
-                     Exclude="..\CmdDock.Widget\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\**\publish\**\*.*" />
+                     Exclude="..\CmdDock.Widget\bin\$(Platform)\$(Configuration)\net8.0-windows10.0.26100.0\**\publish\**\*.*;..\CmdDock.Widget\**\CmdDock.Core.*" />
       <WidgetOutputs Condition="'@(WidgetOutputs)' == ''"
                      Include="..\CmdDock.Widget\bin\$(Configuration)\net8.0-windows10.0.26100.0\**\*.*"
-                     Exclude="..\CmdDock.Widget\bin\$(Configuration)\net8.0-windows10.0.26100.0\**\publish\**\*.*" />
+                     Exclude="..\CmdDock.Widget\bin\$(Configuration)\net8.0-windows10.0.26100.0\**\publish\**\*.*;..\CmdDock.Widget\**\CmdDock.Core.*" />
     </ItemGroup>
     <Copy SourceFiles="@(WidgetOutputs)"
           DestinationFolder="$(TargetDir)%(RecursiveDir)"
