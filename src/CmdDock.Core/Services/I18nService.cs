@@ -30,12 +30,9 @@ public class I18nService
         }
         set
         {
-            if (_currentConfigLanguage != value)
-            {
-                _currentConfigLanguage = value;
-                AppSettingsService.SetLanguage(value);
-                LanguageChanged?.Invoke();
-            }
+            _currentConfigLanguage = value;
+            AppSettingsService.SetLanguage(value);
+            LanguageChanged?.Invoke();
         }
     }
 
