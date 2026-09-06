@@ -595,7 +595,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
             }
 
             // 2. Not running: launch via AUMID or exe
-            var aumid = "5309BBD2-1191-42F7-9D5D-5CD714F08588_1z32rh13vfry6!App";
+            var aumid = "Norns.CmdDock_sxt4q0tm9x2xr!App";
             try
             {
                 Process.Start(new ProcessStartInfo

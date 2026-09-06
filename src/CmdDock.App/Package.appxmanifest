@@ -9,8 +9,8 @@
   IgnorableNamespaces="uap uap3 com rescap">
 
   <Identity
-    Name="5309BBD2-1191-42F7-9D5D-5CD714F08588"
-    Publisher="CN=AppPublisher"
+    Name="Norns.CmdDock"
+    Publisher="CN=257586C2-E7B0-47F3-BAED-A744A66748A1"
     Version="1.0.1.0" />
 
   <Properties>
