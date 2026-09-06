@@ -11,16 +11,15 @@
   <Identity
     Name="5309BBD2-1191-42F7-9D5D-5CD714F08588"
     Publisher="CN=AppPublisher"
-    Version="1.0.0.3" />
+    Version="1.0.1.0" />
 
   <Properties>
     <DisplayName>CmdDock</DisplayName>
-    <PublisherDisplayName>AppPublisher</PublisherDisplayName>
+    <PublisherDisplayName>Norns</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
   </Dependencies>
 
