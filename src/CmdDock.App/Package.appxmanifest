@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap3 com rescap">
+
+  <Identity
+    Name="5309BBD2-1191-42F7-9D5D-5CD714F08588"
+    Publisher="CN=AppPublisher"
+    Version="1.0.0.3" />
+
+  <Properties>
+    <DisplayName>CmdDock</DisplayName>
+    <PublisherDisplayName>AppPublisher</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="CmdDock"
+        Description="Windows 11 快捷命令启动坞与桌面小组件"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <!-- Windows 11 Widget COM Server Extension -->
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:ExeServer Executable="CmdDock.Widget.exe" DisplayName="CmdDock Widget Server">
+              <com:Class Id="B6A68D64-323A-4E38-A372-2D99BE1F1E85" DisplayName="CmdDock Widget Provider" />
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
+
+        <!-- Windows 11 Widget Board AppExtension -->
+        <uap3:Extension Category="windows.appExtension">
+          <uap3:AppExtension Name="com.microsoft.windows.widgets" DisplayName="CmdDock" Id="CmdDockWidgetApp" PublicFolder="Public">
+            <uap3:Properties>
+              <WidgetProvider>
+                <ProviderIcons>
+                  <Icon Path="ProviderAssets\WidgetIcon.png" />
+                </ProviderIcons>
+                <Activation>
+                  <CreateInstance ClassId="B6A68D64-323A-4E38-A372-2D99BE1F1E85" />
+                </Activation>
+                <Definitions>
+                  <Definition Id="CmdDock_MainWidget"
+                              DisplayName="CmdDock 快捷命令"
+                              Description="Windows 11 快捷命令启动坞"
+                              AllowMultiple="true">
+                    <Capabilities>
+                      <Capability>
+                        <Size Name="small" />
+                      </Capability>
+                      <Capability>
+                        <Size Name="medium" />
+                      </Capability>
+                      <Capability>
+                        <Size Name="large" />
+                      </Capability>
+                    </Capabilities>
+                    <ThemeResources>
+                      <Icons>
+                        <Icon Path="ProviderAssets\WidgetIcon.png" />
+                      </Icons>
+                      <Screenshots>
+                        <Screenshot Path="ProviderAssets\WidgetScreenshot.png" DisplayAltText="CmdDock 快捷命令" />
+                      </Screenshots>
+                      <DarkMode>
+                        <Icons>
+                          <Icon Path="ProviderAssets\WidgetIcon.png" />
+                        </Icons>
+                        <Screenshots>
+                          <Screenshot Path="ProviderAssets\WidgetScreenshot.png" DisplayAltText="CmdDock 快捷命令" />
+                        </Screenshots>
+                      </DarkMode>
+                      <LightMode>
+                        <Icons>
+                          <Icon Path="ProviderAssets\WidgetIcon.png" />
+                        </Icons>
+                        <Screenshots>
+                          <Screenshot Path="ProviderAssets\WidgetScreenshot.png" DisplayAltText="CmdDock 快捷命令" />
+                        </Screenshots>
+                      </LightMode>
+                    </ThemeResources>
+                  </Definition>
+                </Definitions>
+              </WidgetProvider>
+            </uap3:Properties>
+          </uap3:AppExtension>
+        </uap3:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "CmdDock.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "CmdDock.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

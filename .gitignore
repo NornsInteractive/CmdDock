@@ -1,0 +1,40 @@
+## Visual Studio / .NET Build Artifacts
+[Bb]in/
+[Oo]bj/
+[Aa]pp[Pp]ackages/
+[Pp]ublish/
+publish_test/
+*.msix
+*.msixbundle
+*.msixupload
+*.appx
+*.appxbundle
+*.appxupload
+
+## Visual Studio Cache & User Files
+.vs/
+*.user
+*.userprefs
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Rider / JetBrains
+.idea/
+*.DotSettings.user
+
+## Test Results & Logs
+[Tt]est[Rr]esults/
+*.log
+*.trx
+
+## Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## Node / Temporary
+node_modules/
+dist/
+scratch/

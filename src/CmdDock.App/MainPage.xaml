@@ -1,0 +1,1005 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="CmdDock_App.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:CmdDock.Core.Models"
+    xmlns:vm="using:CmdDock_App.ViewModels"
+    mc:Ignorable="d">
+
+    <Grid>
+        <NavigationView
+            x:Name="NavView"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="True"
+            PaneDisplayMode="Left"
+            SelectionChanged="NavView_SelectionChanged">
+            
+            <NavigationView.PaneHeader>
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="16,10,16,10" VerticalAlignment="Center">
+                    <Image Source="ms-appx:///Assets/Square44x44Logo.png" Width="24" Height="24" />
+                    <TextBlock x:Name="NavPaneHeaderTitle" Text="CmdDock" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+            </NavigationView.PaneHeader>
+            
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="NavCommandsItem" Tag="commands" Content="快捷命令" Icon="AllApps" IsSelected="True" />
+                <NavigationViewItem x:Name="NavPresetsItem" Tag="presets" Content="预设市场" Icon="Library" />
+                <NavigationViewItem x:Name="NavLogsItem" Tag="logs" Content="执行日志" Icon="Clock" />
+                <NavigationViewItem x:Name="NavWidgetItem" Tag="widget" Content="Win11 小组件设置与指南" Icon="View" />
+            </NavigationView.MenuItems>
+
+            <!-- Main Content Container -->
+            <Grid Padding="24,16,24,24">
+                
+                <!-- 1. Commands Panel -->
+                <Grid x:Name="CommandsPanel" Visibility="Visible">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Action Bar -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="AddCommandBtn"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Click="AddCommandBtn_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE710;" />
+                                <TextBlock x:Name="AddCommandBtnText" Text="新建快捷命令" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button
+                            Grid.Column="1"
+                            x:Name="RefreshBtn"
+                            Margin="8,0,0,0"
+                            Click="RefreshBtn_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE72C;" />
+                                <TextBlock x:Name="RefreshBtnText" Text="刷新" />
+                            </StackPanel>
+                        </Button>
+
+                        <ComboBox
+                            x:Name="GroupFilterCombo"
+                            Grid.Column="2"
+                            Margin="12,0,0,0"
+                            Width="155"
+                            SelectionChanged="GroupFilterCombo_SelectionChanged"
+                            ToolTipService.ToolTip="按分类筛选命令">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:CategoryItem">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="{x:Bind DisplayIcon}" FontSize="14" Visibility="{x:Bind GlyphVisibility}"
+                                                  Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+                                        <Image Source="{x:Bind IconGlyph, Converter={StaticResource ImagePathConverter}}"
+                                               Visibility="{x:Bind ImageVisibility}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" />
+                                        <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" VerticalAlignment="Center" FontSize="13" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <Button
+                            x:Name="ManageCategoriesBtn"
+                            Grid.Column="3"
+                            Margin="8,0,0,0"
+                            Click="ManageCategoriesBtn_Click"
+                            ToolTipService.ToolTip="管理快捷命令分类">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE8EC;" />
+                                <TextBlock x:Name="ManageCategoriesBtnText" Text="分类管理" />
+                            </StackPanel>
+                        </Button>
+
+                        <TextBlock
+                            Grid.Column="4"
+                            x:Name="StatusBarText"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <!-- Commands List -->
+                    <ListView
+                        Grid.Row="1"
+                        x:Name="CommandsListView"
+                        SelectionMode="None">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,4" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:CommandItem">
+                                <Border
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="16,14">
+                                    <Grid ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Icon -->
+                                        <Border
+                                            Width="44"
+                                            Height="44"
+                                            CornerRadius="8"
+                                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                            VerticalAlignment="Center">
+                                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <FontIcon
+                                                    Visibility="{x:Bind GlyphVisibility, Mode=OneWay}"
+                                                    Glyph="{x:Bind DisplayIcon, Mode=OneWay}"
+                                                    FontSize="20"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center" />
+                                                <Image
+                                                    Visibility="{x:Bind ImageVisibility, Mode=OneWay}"
+                                                    Source="{x:Bind IconGlyph, Mode=OneWay, Converter={StaticResource ImagePathConverter}}"
+                                                    Width="26"
+                                                    Height="26"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Info -->
+                                        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" FontWeight="SemiBold" FontSize="16" />
+                                                <Border
+                                                    Background="{ThemeResource SystemAccentColorLight3}"
+                                                    CornerRadius="4"
+                                                    Padding="6,1"
+                                                    VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind DisplayShellType, Mode=OneWay}" FontSize="11" FontWeight="Medium" />
+                                                </Border>
+                                                <Border
+                                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="6,1"
+                                                    VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind DisplayExecutionMode, Mode=OneWay}" FontSize="11" />
+                                                </Border>
+                                                <Border
+                                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="6,1"
+                                                    VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind DisplayGroup, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </Border>
+                                            </StackPanel>
+
+                                            <TextBlock
+                                                Text="{x:Bind DisplayDescription, Mode=OneWay}"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                FontSize="12"
+                                                TextTrimming="CharacterEllipsis" />
+
+                                            <TextBlock
+                                                Text="{x:Bind CommandText}"
+                                                FontFamily="Cascadia Code, Consolas"
+                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                FontSize="11"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+
+                                        <!-- Action Buttons -->
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <ToggleSwitch
+                                                IsOn="{x:Bind ShowInWidget, Mode=OneWay}"
+                                                Tag="{x:Bind}"
+                                                DataContext="{x:Bind}"
+                                                OnContent="{x:Bind WidgetSwitchOn, Mode=OneWay}"
+                                                OffContent="{x:Bind WidgetSwitchOff, Mode=OneWay}"
+                                                Toggled="WidgetToggle_Toggled" />
+
+                                            <Button
+                                                Style="{ThemeResource AccentButtonStyle}"
+                                                Tag="{x:Bind}"
+                                                DataContext="{x:Bind}"
+                                                Click="RunCommandBtn_Click"
+                                                ToolTipService.ToolTip="{x:Bind RunToolTip, Mode=OneWay}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE768;" FontSize="12" />
+                                                    <TextBlock Text="{x:Bind RunBtnText, Mode=OneWay}" />
+                                                </StackPanel>
+                                            </Button>
+
+                                            <Button
+                                                Tag="{x:Bind}"
+                                                DataContext="{x:Bind}"
+                                                Click="EditCommandBtn_Click"
+                                                ToolTipService.ToolTip="{x:Bind EditToolTip, Mode=OneWay}">
+                                                <FontIcon Glyph="&#xE70F;" FontSize="12" />
+                                            </Button>
+
+                                            <Button
+                                                Tag="{x:Bind}"
+                                                DataContext="{x:Bind}"
+                                                Click="DeleteCommandBtn_Click"
+                                                ToolTipService.ToolTip="{x:Bind DeleteToolTip, Mode=OneWay}">
+                                                <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <!-- Empty state -->
+                    <StackPanel
+                        Grid.Row="1"
+                        x:Name="EmptyCommandsView"
+                        Visibility="Collapsed"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="12">
+                        <TextBlock Text="⚡" FontSize="48" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="EmptyCommandsTitle" Text="尚未添加任何快捷命令" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="EmptyCommandsSubtitle" Text="点击上方“新建快捷命令”或前往“预设市场”一键添加" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 2. Presets Panel -->
+                <Grid x:Name="PresetsPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Margin="0,0,0,16" Spacing="4">
+                        <TextBlock x:Name="PresetsTitleText" Text="官方实用命令预设库" FontSize="20" FontWeight="Bold" />
+                        <TextBlock x:Name="PresetsSubtitleText" Text="精心整理的常用网络诊断、系统运维与开发高频命令，一键添加即可在 Win11 小组件中直接点击使用" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <ListView
+                        Grid.Row="1"
+                        x:Name="PresetsListView"
+                        SelectionMode="None">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,4" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:CommandItem">
+                                <Border
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="16,14">
+                                    <Grid ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border
+                                            Width="40"
+                                            Height="40"
+                                            CornerRadius="8"
+                                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                            VerticalAlignment="Center">
+                                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <FontIcon
+                                                    Visibility="{x:Bind GlyphVisibility, Mode=OneWay}"
+                                                    Glyph="{x:Bind DisplayIcon, Mode=OneWay}"
+                                                    FontSize="18"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center" />
+                                                <Image
+                                                    Visibility="{x:Bind ImageVisibility, Mode=OneWay}"
+                                                    Source="{x:Bind IconGlyph, Mode=OneWay, Converter={StaticResource ImagePathConverter}}"
+                                                    Width="24"
+                                                    Height="24"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" FontWeight="SemiBold" FontSize="15" />
+                                                <Border Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4" Padding="6,1">
+                                                    <TextBlock Text="{x:Bind DisplayGroup, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </Border>
+                                                <Border Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4" Padding="6,1">
+                                                    <TextBlock Text="{x:Bind DisplayShellType, Mode=OneWay}" FontSize="11" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{x:Bind DisplayDescription, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" />
+                                            <TextBlock Text="{x:Bind CommandText}" FontFamily="Cascadia Code, Consolas" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontSize="11" />
+                                        </StackPanel>
+
+                                        <Button
+                                            Grid.Column="2"
+                                            Tag="{x:Bind}"
+                                            DataContext="{x:Bind}"
+                                            Click="AddPresetBtn_Click"
+                                            Style="{ThemeResource AccentButtonStyle}"
+                                            VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                                <TextBlock Text="{x:Bind AddPresetBtnText, Mode=OneWay}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+
+                <!-- 3. Logs Panel -->
+                <Grid x:Name="LogsPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="0,0,0,16">
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Name="LogsTitleText" Text="命令执行历史日志" FontSize="20" FontWeight="Bold" />
+                            <TextBlock x:Name="LogsSubtitleText" Text="记录最近 50 次命令触发的执行耗时、返回码及控制台输出信息" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button x:Name="ClearLogsBtn" Click="ClearLogsBtn_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                                    <TextBlock x:Name="ClearLogsBtnText" Text="清空日志" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <ListView
+                        Grid.Row="1"
+                        x:Name="LogsListView"
+                        SelectionMode="None">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,4" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:ExecutionLogEntry">
+                                <Border
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="14">
+                                    <StackPanel Spacing="8">
+                                        <Grid>
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="{x:Bind CommandName}" FontWeight="SemiBold" FontSize="14" />
+                                                <Border
+                                                    Background="{x:Bind Success, Converter={StaticResource BoolToBrushConverter}}"
+                                                    CornerRadius="4"
+                                                    Padding="6,1">
+                                                    <TextBlock Text="{x:Bind DisplaySuccess, Mode=OneWay}" FontSize="11" FontWeight="Bold" Foreground="White" />
+                                                </Border>
+                                                <TextBlock Text="{x:Bind FormattedTimestamp}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                                <TextBlock Text="{x:Bind DisplayDuration, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <TextBlock Text="{x:Bind ShellType}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontSize="11" />
+                                        </Grid>
+
+                                        <Border
+                                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                            CornerRadius="4"
+                                            Padding="10,6">
+                                            <TextBlock
+                                                Text="{x:Bind Output}"
+                                                FontFamily="Cascadia Code, Consolas"
+                                                FontSize="11"
+                                                IsTextSelectionEnabled="True"
+                                                TextWrapping="Wrap" />
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+
+                <!-- 4. Widget Guide Panel -->
+                <ScrollViewer x:Name="WidgetPanel" Visibility="Collapsed">
+                    <StackPanel Spacing="20" MaxWidth="800" HorizontalAlignment="Left">
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Name="WidgetTitleText" Text="Windows 11 小组件接入指南与设置" FontSize="22" FontWeight="Bold" />
+                            <TextBlock x:Name="WidgetSubtitleText" Text="让快捷命令常驻任务栏左下角，支持多种个性化布局与无滚轮翻页方式" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <!-- Widget Layout & Pagination Settings Card -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="16">
+                                <Grid>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock x:Name="WidgetLayoutCardTitle" Text="小组件 UI 布局与翻页定制" FontWeight="SemiBold" FontSize="16" />
+                                        <TextBlock x:Name="WidgetLayoutCardDesc" Text="支持左侧菜单与下拉选择分类两种主布局结构，配合无滚轮翻页，修改后实时保存并自动推送到桌面小组件"
+                                                   FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                    <Button
+                                        x:Name="ApplyWidgetSettingsBtn"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Click="ApplyWidgetSettingsBtn_Click"
+                                        Style="{ThemeResource AccentButtonStyle}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE72C;" FontSize="12" />
+                                            <TextBlock x:Name="ApplyWidgetSettingsBtnText" Text="立即同步小组件" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+
+                                <Grid ColumnSpacing="20" RowSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Column 1: Layout Mode -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock x:Name="WidgetLayoutHeader" Text="小组件主布局结构" FontWeight="Medium" FontSize="13" />
+                                        <ComboBox
+                                            x:Name="WidgetLayoutCombo"
+                                            HorizontalAlignment="Stretch"
+                                            SelectionChanged="WidgetLayoutCombo_SelectionChanged">
+                                            <ComboBoxItem x:Name="WidgetLayoutSidebarItem" Tag="sidebar">左侧菜单模式 (SidebarRail - 侧栏导航)</ComboBoxItem>
+                                            <ComboBoxItem x:Name="WidgetLayoutDropdownItem" Tag="dropdown">下拉选择分类 (Dropdown - 顶部下拉框)</ComboBoxItem>
+                                        </ComboBox>
+                                        <TextBlock x:Name="LayoutDescText" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <!-- Column 2: Pagination Style -->
+                                    <StackPanel Grid.Column="1" Spacing="8">
+                                        <TextBlock x:Name="WidgetPaginationHeader" Text="翻页控制器样式 (无滚轮适配)" FontWeight="Medium" FontSize="13" />
+                                        <ComboBox
+                                            x:Name="WidgetPaginationCombo"
+                                            HorizontalAlignment="Stretch"
+                                            SelectionChanged="WidgetPaginationCombo_SelectionChanged">
+                                            <ComboBoxItem x:Name="WidgetPaginationInlineItem" Tag="inline">方案 A: 标题栏极简内嵌翻页器 [◀ 1/3 ▶]</ComboBoxItem>
+                                            <ComboBoxItem x:Name="WidgetPaginationBottomItem" Tag="bottom">方案 B: 底部专属控制微栏 [ 上一页 ◀ ] 第 1/3 页 [ ▶ 下一页 ]</ComboBoxItem>
+                                        </ComboBox>
+                                        <TextBlock x:Name="PaginationDescText" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Small Widget Custom Buttons Configuration (2 rows x 2 cols = 4 buttons) -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="14">
+                                <Grid>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock x:Name="SmallWidgetConfigTitle" Text="小尺寸小组件 (Small) 专属按钮配置 (2行 × 2列，共 4 个)" FontWeight="SemiBold" FontSize="16" />
+                                        <TextBlock x:Name="SmallWidgetConfigDesc" Text="小尺寸小组件已彻底精简分类与顶部工具栏，纯净呈现 4 个快捷按钮。请在下方选择并排序要在小组件中显示的命令："
+                                                   FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                    <Border
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                        CornerRadius="12"
+                                        Padding="10,4">
+                                        <TextBlock x:Name="SmallWidgetCountBadge" Text="已选 0 / 4" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" />
+                                    </Border>
+                                </Grid>
+
+                                <!-- Active 4 Small Widget Buttons (Orderable) -->
+                                <TextBlock x:Name="SmallWidgetOrderTip" Text="当前选定按钮与排列顺序 (第1-2个为第1行，第3-4个为第2行)：" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView
+                                    x:Name="SmallWidgetSelectedListView"
+                                    SelectionMode="None"
+                                    MaxHeight="260">
+                                    <ListView.ItemContainerStyle>
+                                        <Style TargetType="ListViewItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            <Setter Property="Padding" Value="0,2" />
+                                        </Style>
+                                    </ListView.ItemContainerStyle>
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="models:CommandItem">
+                                            <Border
+                                                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="6"
+                                                Padding="10,6">
+                                                <Grid ColumnSpacing="10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <Border Width="28" Height="28" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" VerticalAlignment="Center">
+                                                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                            <FontIcon Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" Glyph="{x:Bind DisplayIcon, Mode=OneWay}" FontSize="14" />
+                                                            <Image Visibility="{x:Bind ImageVisibility, Mode=OneWay}" Source="{x:Bind IconGlyph, Mode=OneWay, Converter={StaticResource ImagePathConverter}}" Width="16" Height="16" />
+                                                        </Grid>
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" FontWeight="SemiBold" FontSize="13" />
+                                                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4" Padding="4,1">
+                                                                <TextBlock Text="{x:Bind DisplayGroup, Mode=OneWay}" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{x:Bind DisplayDescription, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                        <Button Tag="{x:Bind}" Click="SmallWidgetMoveUpBtn_Click" ToolTipService.ToolTip="{x:Bind MoveUpToolTip, Mode=OneWay}" Padding="6,4">
+                                                            <FontIcon Glyph="&#xE70E;" FontSize="11" />
+                                                        </Button>
+                                                        <Button Tag="{x:Bind}" Click="SmallWidgetMoveDownBtn_Click" ToolTipService.ToolTip="{x:Bind MoveDownToolTip, Mode=OneWay}" Padding="6,4">
+                                                            <FontIcon Glyph="&#xE70D;" FontSize="11" />
+                                                        </Button>
+                                                        <Button Tag="{x:Bind}" Click="SmallWidgetRemoveBtn_Click" ToolTipService.ToolTip="{x:Bind RemoveToolTip, Mode=OneWay}" Padding="6,4">
+                                                            <FontIcon Glyph="&#xE711;" FontSize="11" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+
+                                <!-- Available Commands to Add -->
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox
+                                        x:Name="AvailableCommandsCombo"
+                                        Header="添加命令至小尺寸小组件"
+                                        PlaceholderText="选择要添加的快捷命令..."
+                                        HorizontalAlignment="Stretch">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="models:CommandItem">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <FontIcon Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" Glyph="{x:Bind DisplayIcon, Mode=OneWay}" FontSize="13" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" VerticalAlignment="Center" FontSize="13" />
+                                                    <TextBlock Text="{x:Bind DisplayGroup, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Button
+                                        Grid.Column="1"
+                                        VerticalAlignment="Bottom"
+                                        Click="SmallWidgetAddBtn_Click"
+                                        Style="{ThemeResource AccentButtonStyle}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                            <TextBlock x:Name="SmallWidgetAddBtnText" Text="添加" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Visual Card Mockup -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="14">
+                                <TextBlock x:Name="WidgetPreviewTitle" Text="小组件形态预览 (Adaptive Cards)" FontWeight="SemiBold" FontSize="16" />
+                                
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220" />
+                                        <ColumnDefinition Width="340" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Small Mockup (Pure 2 rows x 2 cols grid) -->
+                                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="10" Padding="12">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock x:Name="WidgetPreviewSmallTitle" Text="小组件 (Small - 2行2列纯按钮)" FontWeight="Bold" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <Grid RowSpacing="8" ColumnSpacing="8">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Button x:Name="MockupSmallBtn1" Content="刷新 DNS" HorizontalAlignment="Stretch" FontSize="11" Height="34" Padding="2" />
+                                                <Button x:Name="MockupSmallBtn2" Grid.Column="1" Content="重启桌面" HorizontalAlignment="Stretch" FontSize="11" Height="34" Padding="2" />
+                                                <Button x:Name="MockupSmallBtn3" Grid.Row="1" Content="清剪贴板" HorizontalAlignment="Stretch" FontSize="11" Height="34" Padding="2" />
+                                                <Button x:Name="MockupSmallBtn4" Grid.Row="1" Grid.Column="1" Content="查看端口" HorizontalAlignment="Stretch" FontSize="11" Height="34" Padding="2" />
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Medium Mockup (5 rows x 2 cols grid) -->
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="10" Padding="14">
+                                        <StackPanel Spacing="8">
+                                            <Grid>
+                                                <TextBlock x:Name="WidgetPreviewMedTitle" Text="中组件 (Medium - 5行2列)" FontWeight="Bold" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock x:Name="WidgetPreviewManageText" Text="⚙ 管理" HorizontalAlignment="Right" FontSize="11" Foreground="{ThemeResource SystemAccentColor}" />
+                                            </Grid>
+                                            <Grid ColumnSpacing="8" RowSpacing="6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+                                                <Button x:Name="MockupMedBtn1" Content="刷新 DNS" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn2" Grid.Column="1" Content="清空剪贴板" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn3" Grid.Row="1" Content="查看端口" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn4" Grid.Row="1" Grid.Column="1" Content="一键锁屏" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn5" Grid.Row="2" Content="重启桌面" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn6" Grid.Row="2" Grid.Column="1" Content="测试延时" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn7" Grid.Row="3" Content="Git 状态" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn8" Grid.Row="3" Grid.Column="1" Content="清理垃圾" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn9" Grid.Row="4" Content="IP 详情" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                                <Button x:Name="MockupMedBtn10" Grid.Row="4" Grid.Column="1" Content="Node 版本" HorizontalAlignment="Stretch" FontSize="11" Height="26" />
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Step by step -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="14">
+                                <TextBlock x:Name="WidgetGuideTitle" Text="如何添加到 Windows 11 左下角？" FontWeight="SemiBold" FontSize="16" />
+
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="28" Height="28" CornerRadius="14" Background="{ThemeResource SystemAccentColor}" VerticalAlignment="Center">
+                                        <TextBlock Text="1" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock x:Name="WidgetGuideStep1Text" Text="按下快捷键 Win + W 或点击任务栏左下角的小组件图标呼出面板。" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="28" Height="28" CornerRadius="14" Background="{ThemeResource SystemAccentColor}" VerticalAlignment="Center">
+                                        <TextBlock Text="2" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock x:Name="WidgetGuideStep2Text" Text="点击小组件面板右上角的用户头像或 '+' (添加小组件) 按钮。" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="28" Height="28" CornerRadius="14" Background="{ThemeResource SystemAccentColor}" VerticalAlignment="Center">
+                                        <TextBlock Text="3" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock x:Name="WidgetGuideStep3Text" Text="在列表中找到 CmdDock，点击右侧的固定 (Pin) 按钮将其钉选在面板上。" VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="28" Height="28" CornerRadius="14" Background="{ThemeResource SystemAccentColor}" VerticalAlignment="Center">
+                                        <TextBlock Text="4" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock x:Name="WidgetGuideStep4Text" Text="点击卡片右上角的三点菜单 (...) 可在 小 / 中 / 大 尺寸间自由切换。" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- About Info -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="8">
+                                <TextBlock x:Name="WidgetAboutTitle" Text="关于 CmdDock" FontWeight="SemiBold" FontSize="16" />
+                                <TextBlock x:Name="WidgetAboutVersion" Text="版本: 1.0.0 (Windows App SDK + .NET 8)" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Name="WidgetAboutTech" Text="技术规范: Microsoft.Windows.Widgets.Providers / Adaptive Cards 1.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Name="WidgetAboutStore" Text="Microsoft Store 认证就绪: 具备 runFullTrust 权限声明与隔离沙箱支持" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 5. Settings Panel -->
+                <ScrollViewer x:Name="SettingsPanel" Visibility="Collapsed">
+                    <StackPanel Spacing="20" MaxWidth="800" HorizontalAlignment="Left">
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Name="SettingsTitleText" Text="设置" FontSize="22" FontWeight="Bold" />
+                            <TextBlock x:Name="SettingsSubtitleText" Text="个性化 CmdDock 的外观与偏好" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <!-- Appearance Card -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="16">
+                                <TextBlock x:Name="SettingsAppearanceGroupText" Text="外观与个性化" FontWeight="SemiBold" FontSize="16" />
+
+                                <!-- App Theme Setting -->
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock x:Name="SettingsThemeLabel" Text="应用主题" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock x:Name="SettingsThemeDesc" Text="选择 CmdDock 的界面主题模式，默认跟随 Windows 系统设置。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+
+                                    <ComboBox
+                                        x:Name="ThemeSettingCombo"
+                                        Grid.Column="1"
+                                        Width="180"
+                                        VerticalAlignment="Center"
+                                        SelectionChanged="ThemeSettingCombo_SelectionChanged">
+                                        <ComboBoxItem x:Name="ThemeItemSystem" Tag="system" Content="跟随系统 (默认)" />
+                                        <ComboBoxItem x:Name="ThemeItemLight" Tag="light" Content="浅色" />
+                                        <ComboBoxItem x:Name="ThemeItemDark" Tag="dark" Content="深色" />
+                                    </ComboBox>
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="0,4" />
+
+                                <!-- App Language Setting -->
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock x:Name="SettingsLanguageLabel" Text="显示语言" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock x:Name="SettingsLanguageDesc" Text="选择 CmdDock 的界面显示语言，默认跟随 Windows 系统首选语言。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+
+                                    <ComboBox
+                                        x:Name="LanguageSettingCombo"
+                                        Grid.Column="1"
+                                        Width="180"
+                                        VerticalAlignment="Center"
+                                        SelectionChanged="LanguageSettingCombo_SelectionChanged">
+                                        <ComboBoxItem x:Name="LangItemSystem" Tag="system" Content="跟随系统 (默认)" />
+                                        <ComboBoxItem x:Name="LangItemChinese" Tag="zh-CN" Content="简体中文" />
+                                        <ComboBoxItem x:Name="LangItemEnglish" Tag="en-US" Content="English" />
+                                    </ComboBox>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- About Card -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="16">
+                                <TextBlock x:Name="SettingsAboutGroupText" Text="关于 CmdDock" FontWeight="SemiBold" FontSize="16" />
+
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="ms-appx:///Assets/Square44x44Logo.png" Width="44" Height="44" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="CmdDock" FontWeight="Bold" FontSize="16" />
+                                        <TextBlock x:Name="SettingsAboutDescText" Text="现代化 Windows 11 快捷命令停泊坞与桌面小组件" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock x:Name="SettingsVersionText" Text="版本: 1.0.0.2 (Windows App SDK + .NET 8)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock x:Name="SettingsTechStackText" Text="技术规范: Microsoft.Windows.Widgets.Providers / Adaptive Cards 1.5" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="0,4" />
+
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock x:Name="SettingsDataFolderLabel" Text="配置文件与数据目录" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock x:Name="SettingsDataFolderPath" Text="%LOCALAPPDATA%\CmdDock" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsTextSelectionEnabled="True" />
+                                    </StackPanel>
+
+                                    <Button
+                                        x:Name="OpenDataFolderBtn"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Click="OpenDataFolderBtn_Click">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon Glyph="&#xED25;" FontSize="14" />
+                                            <TextBlock x:Name="OpenDataFolderBtnText" Text="打开配置目录" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 3. Privacy Policy & Data Security Card (In-App Direct Display) -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="16">
+                                <StackPanel Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE72E;" FontSize="18" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                        <TextBlock x:Name="SettingsPrivacyCardTitle" Text="隐私政策与数据安全声明" FontWeight="SemiBold" FontSize="16" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="SettingsPrivacyCardSubtitle" Text="CmdDock 遵循纯本地运行安全原则，全量数据仅存放于您的计算机中。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+
+                                <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="0,2" />
+
+                                <!-- Key Highlights Grid -->
+                                <StackPanel Spacing="12">
+                                    <!-- Point 1: Zero Data -->
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="32" Height="32" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <FontIcon Glyph="&#xE8D7;" FontSize="14" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock x:Name="PrivacyPoint1Title" Text="🛡️ 零数据收集" FontWeight="Medium" FontSize="13" />
+                                            <TextBlock x:Name="PrivacyPoint1Desc" Text="无需注册登录，不搜集用户姓名、邮箱、IP 地址、设备硬件标识或位置信息。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Point 2: Local Storage -->
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="32" Height="32" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <FontIcon Glyph="&#xE753;" FontSize="14" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock x:Name="PrivacyPoint2Title" Text="💾 100% 本地存储" FontWeight="Medium" FontSize="13" />
+                                            <TextBlock x:Name="PrivacyPoint2Desc" Text="所有快捷命令、分类分组、小组件偏好与执行日志全量保存于本地 %LOCALAPPDATA% 目录下。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Point 3: Zero Telemetry -->
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="32" Height="32" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <FontIcon Glyph="&#xE7BA;" FontSize="14" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock x:Name="PrivacyPoint3Title" Text="🚫 无遥测与追踪" FontWeight="Medium" FontSize="13" />
+                                            <TextBlock x:Name="PrivacyPoint3Desc" Text="应用未集成任何第三方数据分析 SDK、广告追踪插件或后台遥测上报代码。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Point 4: Controlled Execution -->
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="32" Height="32" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <FontIcon Glyph="&#xE7EF;" FontSize="14" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock x:Name="PrivacyPoint4Title" Text="⚡ 权限与命令受控" FontWeight="Medium" FontSize="13" />
+                                            <TextBlock x:Name="PrivacyPoint4Desc" Text="申请 runFullTrust 权限仅用于受控执行用户自定义命令，支持小组件卡片内二次确认。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Point 5: Clean Removal -->
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="32" Height="32" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock x:Name="PrivacyPoint5Title" Text="🗑️ 卸载彻底清除" FontWeight="Medium" FontSize="13" />
+                                            <TextBlock x:Name="PrivacyPoint5Desc" Text="通过 Windows 设置或微软商店卸载应用即可彻底清除本应用与所有本地数据。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Expandable Full Policy Box -->
+                                <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="0,2" />
+
+                                <Button
+                                    x:Name="ToggleFullPolicyBtn"
+                                    HorizontalAlignment="Left"
+                                    Click="ToggleFullPolicyBtn_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon x:Name="ToggleFullPolicyIcon" Glyph="&#xE70D;" FontSize="12" />
+                                        <TextBlock x:Name="ToggleFullPolicyBtnText" Text="展开查看完整条款细则" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Border
+                                    x:Name="FullPolicyBox"
+                                    Visibility="Collapsed"
+                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="16">
+                                    <ScrollViewer MaxHeight="300">
+                                        <TextBlock
+                                            x:Name="FullPolicyContentText"
+                                            TextWrapping="Wrap"
+                                            FontSize="12"
+                                            LineHeight="20"
+                                            IsTextSelectionEnabled="True" />
+                                    </ScrollViewer>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Page>
