@@ -596,6 +596,32 @@ public static class WidgetCardBuilder
             }
         };
 
+        if (cmd.LastRunStatus != ExecutionStatus.Idle)
+        {
+            var statusDataUri = WidgetIconService.GetExecutionStatusIconDataUri(cmd.LastRunStatus, 14);
+            if (!string.IsNullOrEmpty(statusDataUri))
+            {
+                cardColumns.Add(new JsonObject
+                {
+                    ["type"] = "Column",
+                    ["width"] = "auto",
+                    ["verticalContentAlignment"] = "Center",
+                    ["spacing"] = "ExtraSmall",
+                    ["items"] = new JsonArray
+                    {
+                        new JsonObject
+                        {
+                            ["type"] = "Image",
+                            ["url"] = statusDataUri,
+                            ["width"] = "14px",
+                            ["height"] = "14px",
+                            ["verticalAlignment"] = "Center"
+                        }
+                    }
+                });
+            }
+        }
+
         container["items"] = new JsonArray
         {
             new JsonObject
@@ -1924,6 +1950,77 @@ public static class WidgetCardBuilder
 
     private static JsonObject CreateLaunchPadTileElement(CommandItem cmd)
     {
+        var tileItems = new JsonArray
+        {
+            new JsonObject
+            {
+                ["type"] = "Image",
+                ["url"] = WidgetIconService.GetCommandIconDataUri(cmd, 22),
+                ["width"] = "22px",
+                ["height"] = "22px",
+                ["horizontalAlignment"] = "Center"
+            }
+        };
+
+        var titleBlock = new JsonObject
+        {
+            ["type"] = "TextBlock",
+            ["text"] = cmd.DisplayName,
+            ["size"] = "Small",
+            ["horizontalAlignment"] = "Center",
+            ["verticalAlignment"] = "Center",
+            ["textTrimming"] = "CharacterEllipsis"
+        };
+
+        if (cmd.LastRunStatus != ExecutionStatus.Idle)
+        {
+            var statusUri = WidgetIconService.GetExecutionStatusIconDataUri(cmd.LastRunStatus, 12);
+            if (!string.IsNullOrEmpty(statusUri))
+            {
+                tileItems.Add(new JsonObject
+                {
+                    ["type"] = "ColumnSet",
+                    ["horizontalAlignment"] = "Center",
+                    ["columns"] = new JsonArray
+                    {
+                        new JsonObject
+                        {
+                            ["type"] = "Column",
+                            ["width"] = "auto",
+                            ["verticalContentAlignment"] = "Center",
+                            ["items"] = new JsonArray { titleBlock }
+                        },
+                        new JsonObject
+                        {
+                            ["type"] = "Column",
+                            ["width"] = "auto",
+                            ["verticalContentAlignment"] = "Center",
+                            ["spacing"] = "ExtraSmall",
+                            ["items"] = new JsonArray
+                            {
+                                new JsonObject
+                                {
+                                    ["type"] = "Image",
+                                    ["url"] = statusUri,
+                                    ["width"] = "12px",
+                                    ["height"] = "12px",
+                                    ["verticalAlignment"] = "Center"
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            else
+            {
+                tileItems.Add(titleBlock);
+            }
+        }
+        else
+        {
+            tileItems.Add(titleBlock);
+        }
+
         return new JsonObject
         {
             ["type"] = "Container",
@@ -1937,25 +2034,7 @@ public static class WidgetCardBuilder
                 ["verb"] = "runCommand",
                 ["data"] = new JsonObject { ["commandId"] = cmd.Id }
             },
-            ["items"] = new JsonArray
-            {
-                new JsonObject
-                {
-                    ["type"] = "Image",
-                    ["url"] = WidgetIconService.GetCommandIconDataUri(cmd, 22),
-                    ["width"] = "22px",
-                    ["height"] = "22px",
-                    ["horizontalAlignment"] = "Center"
-                },
-                new JsonObject
-                {
-                    ["type"] = "TextBlock",
-                    ["text"] = cmd.DisplayName,
-                    ["size"] = "Small",
-                    ["horizontalAlignment"] = "Center",
-                    ["textTrimming"] = "CharacterEllipsis"
-                }
-            }
+            ["items"] = tileItems
         };
     }
 
@@ -2045,6 +2124,32 @@ public static class WidgetCardBuilder
                 ["items"] = new JsonArray { titleBlock }
             }
         };
+
+        if (cmd.LastRunStatus != ExecutionStatus.Idle)
+        {
+            var statusDataUri = WidgetIconService.GetExecutionStatusIconDataUri(cmd.LastRunStatus, 14);
+            if (!string.IsNullOrEmpty(statusDataUri))
+            {
+                cardColumns.Add(new JsonObject
+                {
+                    ["type"] = "Column",
+                    ["width"] = "auto",
+                    ["verticalContentAlignment"] = "Center",
+                    ["spacing"] = "ExtraSmall",
+                    ["items"] = new JsonArray
+                    {
+                        new JsonObject
+                        {
+                            ["type"] = "Image",
+                            ["url"] = statusDataUri,
+                            ["width"] = "14px",
+                            ["height"] = "14px",
+                            ["verticalAlignment"] = "Center"
+                        }
+                    }
+                });
+            }
+        }
 
         container["items"] = new JsonArray
         {

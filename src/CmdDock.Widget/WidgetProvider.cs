@@ -392,14 +392,17 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
                         }
                     }
 
-                    UpdateWidgetUI(widgetId, size, I18nService.Instance.Format("Widget.ConfirmExecuting", command.DisplayName));
+                    command.LastRunStatus = ExecutionStatus.Running;
+                    await _commandService.UpdateExecutionStatusAsync(command.Id, ExecutionStatus.Running, null, null);
+                    UpdateAllActiveWidgets(I18nService.Instance.Format("Widget.ConfirmExecuting", command.DisplayName));
+
                     var result = await _commandExecutor.ExecuteAsync(command);
 
                     var resultMsg = result.Success 
                         ? I18nService.Instance.Format("Widget.ExecSuccess", command.DisplayName, result.DurationMs) 
                         : I18nService.Instance.Format("Widget.ExecFailed", command.DisplayName, result.ExitCode);
 
-                    UpdateWidgetUI(widgetId, size, resultMsg);
+                    UpdateAllActiveWidgets(resultMsg);
                 }
             }
             return;
@@ -438,14 +441,17 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
                 var command = await _commandService.GetByIdAsync(commandId);
                 if (command != null)
                 {
-                    UpdateWidgetUI(widgetId, size, I18nService.Instance.Format("Widget.ConfirmExecuting", command.DisplayName));
+                    command.LastRunStatus = ExecutionStatus.Running;
+                    await _commandService.UpdateExecutionStatusAsync(command.Id, ExecutionStatus.Running, null, null);
+                    UpdateAllActiveWidgets(I18nService.Instance.Format("Widget.ConfirmExecuting", command.DisplayName));
+
                     var result = await _commandExecutor.ExecuteAsync(command);
 
                     var resultMsg = result.Success 
                         ? I18nService.Instance.Format("Widget.ExecSuccess", command.DisplayName, result.DurationMs) 
                         : I18nService.Instance.Format("Widget.ExecFailed", command.DisplayName, result.ExitCode);
 
-                    UpdateWidgetUI(widgetId, size, resultMsg);
+                    UpdateAllActiveWidgets(resultMsg);
                 }
             }
             return;

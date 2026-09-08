@@ -204,6 +204,105 @@ public static class WidgetIconService
         return GetIconDataUri("\uE713", size);
     }
 
+    private static readonly ConcurrentDictionary<string, string> StatusIconCache = new();
+
+    /// <summary>
+    /// Generates a sharp, anti-aliased status icon Data URI for widget command execution status.
+    /// - Running: Fluent Blue circular progress spinner ring.
+    /// - Success: Emerald Green badge with white checkmark.
+    /// - Failed: Fluent Red badge with white cross.
+    /// - Idle: Returns null (no badge).
+    /// </summary>
+    public static string? GetExecutionStatusIconDataUri(ExecutionStatus status, int size = 16)
+    {
+        if (status == ExecutionStatus.Idle)
+        {
+            return null;
+        }
+
+        var cacheKey = $"{status}:{size}";
+        if (StatusIconCache.TryGetValue(cacheKey, out var cached))
+        {
+            return cached;
+        }
+
+        try
+        {
+            int renderSize = Math.Max(32, size * 2); // 2x for retina sharpness
+            using var bmp = new Bitmap(renderSize, renderSize);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.Clear(Color.Transparent);
+
+                float pad = 2f;
+                float w = renderSize - (pad * 2f);
+                float h = renderSize - (pad * 2f);
+
+                if (status == ExecutionStatus.Running)
+                {
+                    // Subtle background track
+                    using var trackPen = new Pen(Color.FromArgb(60, 59, 130, 246), 3.5f);
+                    g.DrawArc(trackPen, pad, pad, w, h, 0, 360);
+
+                    // Active spinner ring
+                    using var spinnerPen = new Pen(Color.FromArgb(255, 37, 99, 235), 3.5f);
+                    spinnerPen.StartCap = LineCap.Round;
+                    spinnerPen.EndCap = LineCap.Round;
+                    g.DrawArc(spinnerPen, pad, pad, w, h, 210, 280);
+                }
+                else if (status == ExecutionStatus.Success)
+                {
+                    // Green solid badge
+                    using var brush = new SolidBrush(Color.FromArgb(255, 16, 185, 129));
+                    g.FillEllipse(brush, pad, pad, w, h);
+
+                    // White checkmark
+                    using var pen = new Pen(Color.White, 3.2f);
+                    pen.StartCap = LineCap.Round;
+                    pen.EndCap = LineCap.Round;
+                    pen.LineJoin = LineJoin.Round;
+                    var points = new PointF[]
+                    {
+                        new(pad + w * 0.28f, pad + h * 0.52f),
+                        new(pad + w * 0.44f, pad + h * 0.70f),
+                        new(pad + w * 0.74f, pad + h * 0.34f)
+                    };
+                    g.DrawLines(pen, points);
+                }
+                else if (status == ExecutionStatus.Failed)
+                {
+                    // Red solid badge
+                    using var brush = new SolidBrush(Color.FromArgb(255, 239, 68, 68));
+                    g.FillEllipse(brush, pad, pad, w, h);
+
+                    // White cross
+                    using var pen = new Pen(Color.White, 3.2f);
+                    pen.StartCap = LineCap.Round;
+                    pen.EndCap = LineCap.Round;
+                    float x1 = pad + w * 0.30f;
+                    float y1 = pad + h * 0.30f;
+                    float x2 = pad + w * 0.70f;
+                    float y2 = pad + h * 0.70f;
+                    g.DrawLine(pen, x1, y1, x2, y2);
+                    g.DrawLine(pen, x2, y1, x1, y2);
+                }
+            }
+
+            using var ms = new MemoryStream();
+            bmp.Save(ms, ImageFormat.Png);
+            var uri = "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+            StatusIconCache[cacheKey] = uri;
+            return uri;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Generates a solid/translucent PNG Data URI for the specified hex color (#RRGGBB or #AARRGGBB).
     /// Used as backgroundImage for customized widget card tiles.

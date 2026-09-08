@@ -59,6 +59,18 @@ public class CommandService : ICommandService
                     cmd.CommandText = "Get-ChildItem -Path $env:TEMP -Force -ErrorAction SilentlyContinue | ForEach-Object { try { Remove-Item $_.FullName -Recurse -Force -ErrorAction Stop } catch { } }; exit 0";
                     modified = true;
                 }
+                if (cmd.CommandText != null && (cmd.CommandText.Contains("wmic diskdrive") || cmd.Id == "preset_disk_health" || cmd.Name == "磁盘驱动器健康状态" || cmd.Name == "Disk Health Check"))
+                {
+                    cmd.ShellType = ShellType.PowerShell;
+                    cmd.CommandText = "Get-PhysicalDisk | Select-Object DeviceId, FriendlyName, MediaType, OperationalStatus, HealthStatus | Format-Table -AutoSize";
+                    modified = true;
+                }
+                if (cmd.CommandText != null && (cmd.CommandText.Contains("python -m http.server") || cmd.Id == "preset_http_server" || cmd.Name == "启动临时 HTTP 服务器" || cmd.Name == "Start Local HTTP Server"))
+                {
+                    cmd.ShellType = ShellType.PowerShell;
+                    cmd.CommandText = "$port = 8080; $listener = New-Object System.Net.HttpListener; $listener.Prefixes.Add('http://localhost:8080/'); $listener.Start(); Write-Host '===================================================' -ForegroundColor Cyan; Write-Host ' CmdDock 原生 HTTP 文件服务器已启动 (端口: 8080)' -ForegroundColor Green; Write-Host ' 本地访问地址: http://localhost:8080/' -ForegroundColor Yellow; Write-Host ' 当前托管目录: ' (Get-Location) -ForegroundColor White; Write-Host ' 按 Ctrl + C 可随时终止服务器' -ForegroundColor Gray; Write-Host '===================================================' -ForegroundColor Cyan; Start-Process 'http://localhost:8080/'; while ($listener.IsListening) { $ctx = $listener.GetContext(); $req = $ctx.Request; $res = $ctx.Response; $rel = $req.Url.LocalPath.TrimStart('/'); if ([string]::IsNullOrEmpty($rel)) { $rel = 'index.html' }; $path = Join-Path (Get-Location) $rel; if (Test-Path $path -PathType Leaf) { $bytes = [System.IO.File]::ReadAllBytes($path); $res.ContentLength64 = $bytes.Length; $res.OutputStream.Write($bytes, 0, $bytes.Length) } else { $items = Get-ChildItem | ForEach-Object { '<li><a href=' + $_.Name + '>' + $_.Name + '</a></li>' }; $html = '<html><head><meta charset=utf-8><title>CmdDock HTTP Server</title></head><body><h2>CmdDock 本地目录文件列表</h2><p>当前目录: ' + (Get-Location) + '</p><ul>' + ($items -join '') + '</ul></body></html>'; $bytes = [System.Text.Encoding]::UTF8.GetBytes($html); $res.ContentType = 'text/html; charset=utf-8'; $res.ContentLength64 = $bytes.Length; $res.OutputStream.Write($bytes, 0, $bytes.Length) }; $res.OutputStream.Close() }";
+                    modified = true;
+                }
             }
             if (modified)
             {

@@ -140,4 +140,109 @@ public class WidgetIconServiceTests
         Assert.Contains(nameof(cmd.GlyphVisibility), notifiedProperties);
         Assert.Contains(nameof(cmd.ImageVisibility), notifiedProperties);
     }
+
+    [Fact]
+    public void GetExecutionStatusIconDataUri_ReturnsCorrectDataUris()
+    {
+        // Idle should return null (no badge)
+        Assert.Null(WidgetIconService.GetExecutionStatusIconDataUri(CmdDock.Core.Models.ExecutionStatus.Idle));
+
+        // Running, Success, Failed should return valid PNG Data URIs
+        var runningUri = WidgetIconService.GetExecutionStatusIconDataUri(CmdDock.Core.Models.ExecutionStatus.Running, 16);
+        var successUri = WidgetIconService.GetExecutionStatusIconDataUri(CmdDock.Core.Models.ExecutionStatus.Success, 16);
+        var failedUri = WidgetIconService.GetExecutionStatusIconDataUri(CmdDock.Core.Models.ExecutionStatus.Failed, 16);
+
+        Assert.NotNull(runningUri);
+        Assert.NotNull(successUri);
+        Assert.NotNull(failedUri);
+
+        Assert.StartsWith("data:image/png;base64,", runningUri);
+        Assert.StartsWith("data:image/png;base64,", successUri);
+        Assert.StartsWith("data:image/png;base64,", failedUri);
+
+        // Verify valid PNG header for runningUri
+        var bytes = Convert.FromBase64String(runningUri.Substring("data:image/png;base64,".Length));
+        Assert.Equal(0x89, bytes[0]);
+        Assert.Equal(0x50, bytes[1]);
+        Assert.Equal(0x4E, bytes[2]);
+        Assert.Equal(0x47, bytes[3]);
+
+        // Distinct icons
+        Assert.NotEqual(runningUri, successUri);
+        Assert.NotEqual(successUri, failedUri);
+    }
+
+    [Fact]
+    public void CreateSmallWidgetButtonItem_IncludesStatusIcon_WhenStatusNotIdle()
+    {
+        var cmd = new CmdDock.Core.Models.CommandItem
+        {
+            Id = "test_cmd",
+            Name = "Test Command",
+            LastRunStatus = CmdDock.Core.Models.ExecutionStatus.Running
+        };
+
+        var el = CmdDock.Widget.WidgetCardBuilder.CreateSmallWidgetButtonItem(cmd);
+        var columns = el["items"]![0]!["columns"]!.AsArray();
+        Assert.Equal(3, columns.Count);
+
+        var runningUri = WidgetIconService.GetExecutionStatusIconDataUri(CmdDock.Core.Models.ExecutionStatus.Running, 14);
+        Assert.NotNull(runningUri);
+        var statusColImage = columns[2]!["items"]![0]!["url"]!.GetValue<string>();
+        Assert.Equal(runningUri, statusColImage);
+    }
+
+    [Fact]
+    public void CreateCommandItemElement_IncludesStatusIcon_WhenStatusNotIdle()
+    {
+        var cmd = new CmdDock.Core.Models.CommandItem
+        {
+            Id = "test_cmd_success",
+            Name = "Test Command Success",
+            LastRunStatus = CmdDock.Core.Models.ExecutionStatus.Success
+        };
+
+        var el = CmdDock.Widget.WidgetCardBuilder.CreateCommandItemElement(cmd, isGrid: false);
+        var columns = el["items"]![0]!["columns"]!.AsArray();
+        Assert.Equal(3, columns.Count);
+
+        var successUri = WidgetIconService.GetExecutionStatusIconDataUri(CmdDock.Core.Models.ExecutionStatus.Success, 14);
+        Assert.NotNull(successUri);
+        var statusColImage = columns[2]!["items"]![0]!["url"]!.GetValue<string>();
+        Assert.Equal(successUri, statusColImage);
+    }
+
+    [Fact]
+    public void PresetService_DiskHealthAndHttpServer_NativeAndAnnotated()
+    {
+        var presetService = new PresetService();
+        var presets = presetService.GetBuiltinPresets();
+
+        var diskHealth = presets.FirstOrDefault(p => p.Id == "preset_disk_health");
+        Assert.NotNull(diskHealth);
+        Assert.Equal(CmdDock.Core.Models.ShellType.PowerShell, diskHealth.ShellType);
+        Assert.Contains("Get-PhysicalDisk", diskHealth.CommandText);
+
+        var httpServer = presets.FirstOrDefault(p => p.Id == "preset_http_server");
+        Assert.NotNull(httpServer);
+        Assert.Equal(CmdDock.Core.Models.ShellType.PowerShell, httpServer.ShellType);
+        Assert.Contains("HttpListener", httpServer.CommandText);
+
+        // Verify dependencies annotated
+        var dockerPs = presets.FirstOrDefault(p => p.Id == "preset_docker_ps");
+        Assert.NotNull(dockerPs);
+        Assert.Contains("Docker", dockerPs.Description);
+
+        var pythonEnv = presets.FirstOrDefault(p => p.Id == "preset_python_env");
+        Assert.NotNull(pythonEnv);
+        Assert.Contains("Python", pythonEnv.Description);
+
+        var wslTerm = presets.FirstOrDefault(p => p.Id == "preset_wsl_terminal");
+        Assert.NotNull(wslTerm);
+        Assert.Contains("WSL", wslTerm.Description);
+
+        var gitCfg = presets.FirstOrDefault(p => p.Id == "preset_git_config");
+        Assert.NotNull(gitCfg);
+        Assert.Contains("Git", gitCfg.Description);
+    }
 }

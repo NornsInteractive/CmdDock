@@ -99,11 +99,11 @@ public class PresetService : IPresetService
             {
                 Id = "preset_disk_health",
                 Name = "磁盘驱动器健康状态",
-                Description = "查询本机所有物理硬盘的健康与运行状态",
+                Description = "查询本机所有物理硬盘的健康与运行状态（基于 Win 原生 PowerShell）",
                 Group = "系统",
                 IconGlyph = "\uEDA2", // HardDrive
-                ShellType = ShellType.Cmd,
-                CommandText = "wmic diskdrive get status,model",
+                ShellType = ShellType.PowerShell,
+                CommandText = "Get-PhysicalDisk | Select-Object DeviceId, FriendlyName, MediaType, OperationalStatus, HealthStatus | Format-Table -AutoSize",
                 ExecutionMode = ExecutionMode.Terminal,
                 RequireConfirmation = false,
                 ShowInWidget = true,
@@ -201,7 +201,7 @@ public class PresetService : IPresetService
             {
                 Id = "preset_docker_ps",
                 Name = "Docker 运行容器状态",
-                Description = "查看正在运行的 Docker 容器列表、状态和端口映射",
+                Description = "查看正在运行的 Docker 容器列表、状态和端口映射（需先安装 Docker）",
                 Group = "开发",
                 IconGlyph = "\uE74C", // Cloud
                 ShellType = ShellType.PowerShell,
@@ -215,7 +215,7 @@ public class PresetService : IPresetService
             {
                 Id = "preset_docker_prune",
                 Name = "清理 Docker 虚悬缓存",
-                Description = "一键清理无用的 Docker 悬空镜像、容器和网络构建缓存",
+                Description = "一键清理无用的 Docker 悬空镜像、容器和网络构建缓存（需先安装 Docker）",
                 Group = "开发",
                 IconGlyph = "\uE7F4", // Package
                 ShellType = ShellType.PowerShell,
@@ -229,7 +229,7 @@ public class PresetService : IPresetService
             {
                 Id = "preset_python_env",
                 Name = "Python 依赖包列表",
-                Description = "列出当前 Python 环境下所有已安装的第三方包版本",
+                Description = "列出当前 Python 环境下所有已安装的第三方包版本（需先安装 Python）",
                 Group = "开发",
                 IconGlyph = "\uE943", // Code
                 ShellType = ShellType.PowerShell,
@@ -243,11 +243,11 @@ public class PresetService : IPresetService
             {
                 Id = "preset_http_server",
                 Name = "启动临时 HTTP 服务器",
-                Description = "在 8080 端口快速启动一个本地静态网页服务器",
+                Description = "在 8080 端口启动 Windows 原生 HTTP 静态服务器（免装 Python，自动打开浏览器）",
                 Group = "开发",
                 IconGlyph = "\uE8A7", // Server
                 ShellType = ShellType.PowerShell,
-                CommandText = "python -m http.server 8080",
+                CommandText = "$port = 8080; $listener = New-Object System.Net.HttpListener; $listener.Prefixes.Add('http://localhost:8080/'); $listener.Start(); Write-Host '===================================================' -ForegroundColor Cyan; Write-Host ' CmdDock 原生 HTTP 文件服务器已启动 (端口: 8080)' -ForegroundColor Green; Write-Host ' 本地访问地址: http://localhost:8080/' -ForegroundColor Yellow; Write-Host ' 当前托管目录: ' (Get-Location) -ForegroundColor White; Write-Host ' 按 Ctrl + C 可随时终止服务器' -ForegroundColor Gray; Write-Host '===================================================' -ForegroundColor Cyan; Start-Process 'http://localhost:8080/'; while ($listener.IsListening) { $ctx = $listener.GetContext(); $req = $ctx.Request; $res = $ctx.Response; $rel = $req.Url.LocalPath.TrimStart('/'); if ([string]::IsNullOrEmpty($rel)) { $rel = 'index.html' }; $path = Join-Path (Get-Location) $rel; if (Test-Path $path -PathType Leaf) { $bytes = [System.IO.File]::ReadAllBytes($path); $res.ContentLength64 = $bytes.Length; $res.OutputStream.Write($bytes, 0, $bytes.Length) } else { $items = Get-ChildItem | ForEach-Object { '<li><a href=' + $_.Name + '>' + $_.Name + '</a></li>' }; $html = '<html><head><meta charset=utf-8><title>CmdDock HTTP Server</title></head><body><h2>CmdDock 本地目录文件列表</h2><p>当前目录: ' + (Get-Location) + '</p><ul>' + ($items -join '') + '</ul></body></html>'; $bytes = [System.Text.Encoding]::UTF8.GetBytes($html); $res.ContentType = 'text/html; charset=utf-8'; $res.ContentLength64 = $bytes.Length; $res.OutputStream.Write($bytes, 0, $bytes.Length) }; $res.OutputStream.Close() }",
                 ExecutionMode = ExecutionMode.Terminal,
                 RequireConfirmation = false,
                 ShowInWidget = true,
@@ -257,7 +257,7 @@ public class PresetService : IPresetService
             {
                 Id = "preset_wsl_terminal",
                 Name = "进入 WSL Linux 环境",
-                Description = "一键打开并进入 Windows Subsystem for Linux 终端环境",
+                Description = "一键打开并进入 Windows Subsystem for Linux 终端环境（需先安装 WSL）",
                 Group = "开发",
                 IconGlyph = "\uE756", // Terminal
                 ShellType = ShellType.Executable,
@@ -271,7 +271,7 @@ public class PresetService : IPresetService
             {
                 Id = "preset_git_config",
                 Name = "Git 全局配置查看",
-                Description = "在终端中展示 Git 的全局配置项与来源文件",
+                Description = "在终端中展示 Git 的全局配置项与来源文件（需先安装 Git）",
                 Group = "开发",
                 IconGlyph = "\uE9E9", // Branch
                 ShellType = ShellType.Cmd,
