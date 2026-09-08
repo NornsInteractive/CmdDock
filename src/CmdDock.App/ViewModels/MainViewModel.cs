@@ -274,6 +274,26 @@ public partial class MainViewModel : ObservableObject
 
         await RefreshLogsAsync();
         WidgetNotificationService.NotifyWidgets(Commands);
+
+        // Auto-dismiss status badge after 2 seconds
+        var runTimestamp = item.LastRunTime ?? DateTime.UtcNow;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(2000);
+                if (item.LastRunTime == runTimestamp)
+                {
+                    await _commandService.UpdateExecutionStatusAsync(item.Id, ExecutionStatus.Idle, null, null);
+                    App.MainWindowInstance?.DispatcherQueue?.TryEnqueue(() =>
+                    {
+                        item.LastRunStatus = ExecutionStatus.Idle;
+                    });
+                    WidgetNotificationService.NotifyWidgets(Commands);
+                }
+            }
+            catch { }
+        });
     }
 
     [RelayCommand]

@@ -518,6 +518,35 @@ public static class WidgetCardBuilder
         }
     }
 
+    /// <summary>
+    /// Determines whether the status icon (running spinner, success check, failed cross)
+    /// should be displayed. Running status is always shown while active.
+    /// Success or Failed status automatically expires after 2.5 seconds to keep UI clean.
+    /// </summary>
+    public static bool ShouldShowStatusIcon(CommandItem cmd)
+    {
+        if (cmd.LastRunStatus == ExecutionStatus.Idle)
+        {
+            return false;
+        }
+
+        // Running status is always shown while in progress
+        if (cmd.LastRunStatus == ExecutionStatus.Running)
+        {
+            return true;
+        }
+
+        // Success or Failed status automatically expires after 2.5 seconds
+        if (cmd.LastRunTime.HasValue)
+        {
+            var elapsed = (DateTime.UtcNow - cmd.LastRunTime.Value).TotalMilliseconds;
+            return elapsed >= 0 && elapsed < 2500;
+        }
+
+        // If no timestamp is present (e.g. freshly set in memory test), show it
+        return true;
+    }
+
     public static JsonObject CreateSmallWidgetButtonItem(CommandItem cmd)
     {
         bool hasCustomBg = !string.IsNullOrWhiteSpace(cmd.WidgetBackgroundColor);
@@ -596,7 +625,7 @@ public static class WidgetCardBuilder
             }
         };
 
-        if (cmd.LastRunStatus != ExecutionStatus.Idle)
+        if (ShouldShowStatusIcon(cmd))
         {
             var statusDataUri = WidgetIconService.GetExecutionStatusIconDataUri(cmd.LastRunStatus, 14);
             if (!string.IsNullOrEmpty(statusDataUri))
@@ -1972,7 +2001,7 @@ public static class WidgetCardBuilder
             ["textTrimming"] = "CharacterEllipsis"
         };
 
-        if (cmd.LastRunStatus != ExecutionStatus.Idle)
+        if (ShouldShowStatusIcon(cmd))
         {
             var statusUri = WidgetIconService.GetExecutionStatusIconDataUri(cmd.LastRunStatus, 12);
             if (!string.IsNullOrEmpty(statusUri))
@@ -2125,7 +2154,7 @@ public static class WidgetCardBuilder
             }
         };
 
-        if (cmd.LastRunStatus != ExecutionStatus.Idle)
+        if (ShouldShowStatusIcon(cmd))
         {
             var statusDataUri = WidgetIconService.GetExecutionStatusIconDataUri(cmd.LastRunStatus, 14);
             if (!string.IsNullOrEmpty(statusDataUri))

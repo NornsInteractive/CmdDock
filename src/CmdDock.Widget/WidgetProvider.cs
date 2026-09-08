@@ -31,6 +31,7 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
 
     private static FileSystemWatcher? _fileWatcher;
     private static System.Threading.Timer? _debounceTimer;
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> _latestExecutionTimestamps = new();
 
     static WidgetProvider()
     {
@@ -403,6 +404,23 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
                         : I18nService.Instance.Format("Widget.ExecFailed", command.DisplayName, result.ExitCode);
 
                     UpdateAllActiveWidgets(resultMsg);
+
+                    // Auto-dismiss status badge after 2 seconds
+                    var runTimestamp = DateTime.UtcNow;
+                    _latestExecutionTimestamps[command.Id] = runTimestamp;
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(2000);
+                            if (_latestExecutionTimestamps.TryGetValue(command.Id, out var ts) && ts == runTimestamp)
+                            {
+                                await _commandService.UpdateExecutionStatusAsync(command.Id, ExecutionStatus.Idle, null, null);
+                                UpdateAllActiveWidgets();
+                            }
+                        }
+                        catch { }
+                    });
                 }
             }
             return;
@@ -452,6 +470,23 @@ public class WidgetProvider : IWidgetProvider, IWidgetProvider2
                         : I18nService.Instance.Format("Widget.ExecFailed", command.DisplayName, result.ExitCode);
 
                     UpdateAllActiveWidgets(resultMsg);
+
+                    // Auto-dismiss status badge after 2 seconds
+                    var confirmRunTimestamp = DateTime.UtcNow;
+                    _latestExecutionTimestamps[command.Id] = confirmRunTimestamp;
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(2000);
+                            if (_latestExecutionTimestamps.TryGetValue(command.Id, out var ts) && ts == confirmRunTimestamp)
+                            {
+                                await _commandService.UpdateExecutionStatusAsync(command.Id, ExecutionStatus.Idle, null, null);
+                                UpdateAllActiveWidgets();
+                            }
+                        }
+                        catch { }
+                    });
                 }
             }
             return;

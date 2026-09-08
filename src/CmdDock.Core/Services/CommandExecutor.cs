@@ -81,6 +81,35 @@ public class CommandExecutor : ICommandExecutor
 
     private async Task<ExecutionResult> ExecuteProcessAsync(CommandItem item, Stopwatch stopwatch, CancellationToken cancellationToken)
     {
+        // For Executables (e.g. taskmgr.exe, notepad.exe, or any desktop app):
+        // Always launch via ShellExecute so Windows handles UAC elevation handoff,
+        // and avoid blocking or failing on GUI apps.
+        if (item.ShellType == ShellType.Executable)
+        {
+            var exeArgs = string.IsNullOrWhiteSpace(item.Arguments) ? "" : item.Arguments;
+            var psiExe = new ProcessStartInfo
+            {
+                FileName = item.CommandText,
+                Arguments = exeArgs,
+                UseShellExecute = true,
+                WorkingDirectory = string.IsNullOrWhiteSpace(item.WorkingDirectory) ? Environment.CurrentDirectory : item.WorkingDirectory
+            };
+
+            if (item.ExecutionMode == ExecutionMode.Elevated)
+            {
+                psiExe.Verb = "runas";
+            }
+
+            using var process = Process.Start(psiExe);
+            stopwatch.Stop();
+            return ExecutionResult.Succeeded(
+                item.Id,
+                item.DisplayName,
+                I18nService.Instance["Executor.TerminalLaunched"],
+                stopwatch.ElapsedMilliseconds,
+                0);
+        }
+
         var (fileName, arguments, useShellExecute, createNoWindow) = ResolveLaunchParameters(item);
 
         var psi = new ProcessStartInfo
@@ -130,9 +159,13 @@ public class CommandExecutor : ICommandExecutor
             var stdout = outputBuilder.ToString().Trim();
             var stderr = errorBuilder.ToString().Trim();
 
-            if (process.ExitCode == 0)
+            // Taskmgr and some Windows elevation broker stubs return -2147467260 (0x80004004 E_ABORT) upon successful handoff
+            bool isSuccess = process.ExitCode == 0 ||
+                (process.ExitCode == -2147467260 && item.CommandText.Contains("taskmgr", StringComparison.OrdinalIgnoreCase));
+
+            if (isSuccess)
             {
-                return ExecutionResult.Succeeded(item.Id, item.DisplayName, stdout, stopwatch.ElapsedMilliseconds, process.ExitCode);
+                return ExecutionResult.Succeeded(item.Id, item.DisplayName, stdout, stopwatch.ElapsedMilliseconds, 0);
             }
             else
             {

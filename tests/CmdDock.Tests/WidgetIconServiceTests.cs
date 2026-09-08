@@ -245,4 +245,54 @@ public class WidgetIconServiceTests
         Assert.NotNull(gitCfg);
         Assert.Contains("Git", gitCfg.Description);
     }
+
+    [Fact]
+    public void ShouldShowStatusIcon_AutoExpiresAfterTwoSeconds()
+    {
+        var cmd = new CmdDock.Core.Models.CommandItem
+        {
+            Id = "cmd_idle",
+            LastRunStatus = CmdDock.Core.Models.ExecutionStatus.Idle
+        };
+        Assert.False(CmdDock.Widget.WidgetCardBuilder.ShouldShowStatusIcon(cmd));
+
+        cmd.LastRunStatus = CmdDock.Core.Models.ExecutionStatus.Running;
+        Assert.True(CmdDock.Widget.WidgetCardBuilder.ShouldShowStatusIcon(cmd));
+
+        // Recently succeeded (< 2.5s) -> show icon
+        cmd.LastRunStatus = CmdDock.Core.Models.ExecutionStatus.Success;
+        cmd.LastRunTime = DateTime.UtcNow;
+        Assert.True(CmdDock.Widget.WidgetCardBuilder.ShouldShowStatusIcon(cmd));
+
+        // Succeeded more than 2.5 seconds ago -> auto-expired, do NOT show
+        cmd.LastRunTime = DateTime.UtcNow.AddSeconds(-5);
+        Assert.False(CmdDock.Widget.WidgetCardBuilder.ShouldShowStatusIcon(cmd));
+
+        // Failed more than 2.5 seconds ago -> auto-expired, do NOT show
+        cmd.LastRunStatus = CmdDock.Core.Models.ExecutionStatus.Failed;
+        cmd.LastRunTime = DateTime.UtcNow.AddSeconds(-10);
+        Assert.False(CmdDock.Widget.WidgetCardBuilder.ShouldShowStatusIcon(cmd));
+    }
+
+    [Fact]
+    public async Task CommandExecutor_ExecutableLaunch_Succeeds()
+    {
+        var mockService = new CommandService();
+        var mockLog = new LogService();
+        var executor = new CommandExecutor(mockService, mockLog);
+
+        var taskmgrCmd = new CmdDock.Core.Models.CommandItem
+        {
+            Id = "test_taskmgr",
+            Name = "Taskmgr Test",
+            ShellType = CmdDock.Core.Models.ShellType.Executable,
+            CommandText = "cmd.exe",
+            Arguments = "/c exit 0",
+            ExecutionMode = CmdDock.Core.Models.ExecutionMode.Silent
+        };
+
+        var result = await executor.ExecuteAsync(taskmgrCmd);
+        Assert.True(result.Success);
+        Assert.Equal(0, result.ExitCode);
+    }
 }

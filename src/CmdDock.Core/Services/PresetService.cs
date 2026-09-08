@@ -89,7 +89,7 @@ public class PresetService : IPresetService
                 Group = "系统",
                 IconGlyph = "\uE7F8", // PC / System
                 ShellType = ShellType.Cmd,
-                CommandText = "rundll32.exe sysdm.cpl,EditEnvironmentVariables",
+                CommandText = "start rundll32.exe sysdm.cpl,EditEnvironmentVariables",
                 ExecutionMode = ExecutionMode.Silent,
                 RequireConfirmation = false,
                 ShowInWidget = true,

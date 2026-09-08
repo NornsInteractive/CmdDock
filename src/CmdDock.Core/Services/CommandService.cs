@@ -71,6 +71,20 @@ public class CommandService : ICommandService
                     cmd.CommandText = "$port = 8080; $listener = New-Object System.Net.HttpListener; $listener.Prefixes.Add('http://localhost:8080/'); $listener.Start(); Write-Host '===================================================' -ForegroundColor Cyan; Write-Host ' CmdDock 原生 HTTP 文件服务器已启动 (端口: 8080)' -ForegroundColor Green; Write-Host ' 本地访问地址: http://localhost:8080/' -ForegroundColor Yellow; Write-Host ' 当前托管目录: ' (Get-Location) -ForegroundColor White; Write-Host ' 按 Ctrl + C 可随时终止服务器' -ForegroundColor Gray; Write-Host '===================================================' -ForegroundColor Cyan; Start-Process 'http://localhost:8080/'; while ($listener.IsListening) { $ctx = $listener.GetContext(); $req = $ctx.Request; $res = $ctx.Response; $rel = $req.Url.LocalPath.TrimStart('/'); if ([string]::IsNullOrEmpty($rel)) { $rel = 'index.html' }; $path = Join-Path (Get-Location) $rel; if (Test-Path $path -PathType Leaf) { $bytes = [System.IO.File]::ReadAllBytes($path); $res.ContentLength64 = $bytes.Length; $res.OutputStream.Write($bytes, 0, $bytes.Length) } else { $items = Get-ChildItem | ForEach-Object { '<li><a href=' + $_.Name + '>' + $_.Name + '</a></li>' }; $html = '<html><head><meta charset=utf-8><title>CmdDock HTTP Server</title></head><body><h2>CmdDock 本地目录文件列表</h2><p>当前目录: ' + (Get-Location) + '</p><ul>' + ($items -join '') + '</ul></body></html>'; $bytes = [System.Text.Encoding]::UTF8.GetBytes($html); $res.ContentType = 'text/html; charset=utf-8'; $res.ContentLength64 = $bytes.Length; $res.OutputStream.Write($bytes, 0, $bytes.Length) }; $res.OutputStream.Close() }";
                     modified = true;
                 }
+                if (cmd.CommandText != null && cmd.CommandText.Equals("rundll32.exe sysdm.cpl,EditEnvironmentVariables", StringComparison.OrdinalIgnoreCase))
+                {
+                    cmd.CommandText = "start rundll32.exe sysdm.cpl,EditEnvironmentVariables";
+                    modified = true;
+                }
+                // Automatically clear stale execution status badges on load
+                if (cmd.LastRunStatus != ExecutionStatus.Idle && cmd.LastRunStatus != ExecutionStatus.Running)
+                {
+                    if (!cmd.LastRunTime.HasValue || (DateTime.UtcNow - cmd.LastRunTime.Value).TotalSeconds > 3)
+                    {
+                        cmd.LastRunStatus = ExecutionStatus.Idle;
+                        modified = true;
+                    }
+                }
             }
             if (modified)
             {
