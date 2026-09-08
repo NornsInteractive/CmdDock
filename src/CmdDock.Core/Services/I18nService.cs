@@ -127,16 +127,98 @@ public class I18nService
         };
     }
 
-    public string GetPresetLocalizedName(string id, string fallback)
+    private static readonly Dictionary<string, string> _nameToPresetId = new(StringComparer.OrdinalIgnoreCase)
     {
-        var key = $"Preset.{id}.Name";
-        return GetString(key, fallback: fallback);
+        ["重启资源管理器"] = "preset_restart_explorer",
+        ["Restart Explorer"] = "preset_restart_explorer",
+        ["清理系统临时文件"] = "preset_clean_temp",
+        ["Clean Temp Files"] = "preset_clean_temp",
+        ["清空系统剪贴板"] = "preset_clear_clipboard",
+        ["清空剪贴板"] = "preset_clear_clipboard",
+        ["Clear Clipboard"] = "preset_clear_clipboard",
+        ["一键锁屏"] = "preset_lock_screen",
+        ["Lock Screen"] = "preset_lock_screen",
+        ["快速打开任务管理器"] = "preset_taskmgr",
+        ["Open Task Manager"] = "preset_taskmgr",
+        ["系统环境变量设置"] = "preset_env_vars",
+        ["Environment Variables"] = "preset_env_vars",
+        ["磁盘驱动器健康状态"] = "preset_disk_health",
+        ["Disk Health Check"] = "preset_disk_health",
+        ["Windows 安全中心"] = "preset_defender_scan",
+        ["Windows Security"] = "preset_defender_scan",
+        ["刷新 DNS 缓存"] = "preset_flush_dns",
+        ["Flush DNS Cache"] = "preset_flush_dns",
+        ["查看正在监听端口"] = "preset_port_listening",
+        ["查看监听端口"] = "preset_port_listening",
+        ["View Listening Ports"] = "preset_port_listening",
+        ["快速释放 8080 端口"] = "preset_release_8080",
+        ["Release Port 8080"] = "preset_release_8080",
+        ["测试公网 IP 与连通性"] = "preset_public_ip",
+        ["Check Public IP & Ping"] = "preset_public_ip",
+        ["重置 Winsock 协议栈"] = "preset_reset_winsock",
+        ["Reset Winsock Stack"] = "preset_reset_winsock",
+        ["Docker 运行容器状态"] = "preset_docker_ps",
+        ["Docker 运行状态"] = "preset_docker_ps",
+        ["Docker Containers"] = "preset_docker_ps",
+        ["清理 Docker 虚悬缓存"] = "preset_docker_prune",
+        ["Prune Docker Cache"] = "preset_docker_prune",
+        ["Python 依赖包列表"] = "preset_python_env",
+        ["Python Pip Packages"] = "preset_python_env",
+        ["启动临时 HTTP 服务器"] = "preset_http_server",
+        ["Start Local HTTP Server"] = "preset_http_server",
+        ["进入 WSL Linux 环境"] = "preset_wsl_terminal",
+        ["Launch WSL Terminal"] = "preset_wsl_terminal",
+        ["Git 全局配置查看"] = "preset_git_config",
+        ["View Git Configuration"] = "preset_git_config",
+        ["网络连通与延时测试"] = "preset_ping_test",
+        ["Network Ping Test"] = "preset_ping_test",
+        ["查看内网与公网 IP"] = "preset_show_ip",
+        ["Show IP Addresses"] = "preset_show_ip",
+        ["查看本地监听端口"] = "preset_active_ports",
+        ["View Local Ports"] = "preset_active_ports",
+        ["重置本机 IP 租约"] = "preset_release_renew_ip",
+        ["Release & Renew IP"] = "preset_release_renew_ip",
+        ["Git 仓库状态速查"] = "preset_git_status",
+        ["Git Repo Status"] = "preset_git_status",
+        ["Node & NPM 环境版本"] = "preset_node_version",
+        ["Node & NPM Versions"] = "preset_node_version",
+        ["按端口查杀占用进程"] = "preset_kill_port",
+        ["Kill Process by Port"] = "preset_kill_port",
+        ["彻底关闭 WSL 虚拟机"] = "preset_stop_wsl",
+        ["Shutdown WSL"] = "preset_stop_wsl"
+    };
+
+    public string ResolvePresetId(string id, string? name = null)
+    {
+        if (!string.IsNullOrWhiteSpace(id) && id.StartsWith("preset_", StringComparison.OrdinalIgnoreCase))
+        {
+            return id;
+        }
+        if (!string.IsNullOrWhiteSpace(name) && _nameToPresetId.TryGetValue(name.Trim(), out var pidByName))
+        {
+            return pidByName;
+        }
+        if (!string.IsNullOrWhiteSpace(id) && _nameToPresetId.TryGetValue(id.Trim(), out var pidById))
+        {
+            return pidById;
+        }
+        return id;
     }
 
-    public string GetPresetLocalizedDescription(string id, string fallback)
+    public string GetPresetLocalizedName(string id, string fallback)
     {
-        var key = $"Preset.{id}.Desc";
-        return GetString(key, fallback: fallback);
+        var effectiveId = ResolvePresetId(id, fallback);
+        var key = $"Preset.{effectiveId}.Name";
+        var res = GetString(key);
+        return res != key ? res : fallback;
+    }
+
+    public string GetPresetLocalizedDescription(string id, string fallback, string? name = null)
+    {
+        var effectiveId = ResolvePresetId(id, name);
+        var key = $"Preset.{effectiveId}.Desc";
+        var res = GetString(key);
+        return res != key ? res : fallback;
     }
 
     private static readonly Dictionary<string, string> _zhStrings = new(StringComparer.OrdinalIgnoreCase)
@@ -487,7 +569,22 @@ public class I18nService
         ["Mockup.GitStatus"] = "Git 状态",
         ["Mockup.CleanTemp"] = "清理垃圾",
         ["Mockup.IpDetails"] = "IP 详情",
-        ["Mockup.NodeVersion"] = "Node 版本"
+        ["Mockup.NodeVersion"] = "Node 版本",
+
+        // Status & Execution Messages
+        ["Status.Ready"] = "就绪",
+        ["Status.Executing"] = "正在执行: {0}...",
+        ["Status.ExecSuccess"] = "✓ {0} 执行成功 ({1}ms)",
+        ["Status.ExecFailed"] = "✗ {0} 执行失败 (代码 {1})",
+        ["Status.Deleted"] = "已删除命令: {0}",
+        ["Status.AddedToWidget"] = "已添加到小组件: {0}",
+        ["Status.HiddenFromWidget"] = "已从小组件隐藏: {0}",
+        ["Status.PresetAdded"] = "已添加预设命令: {0} 并同步至小组件",
+        ["Status.LogsCleared"] = "已清空执行日志",
+        ["Status.Saved"] = "已保存命令: {0}",
+        ["Executor.LaunchException"] = "启动命令发生异常: {0}",
+        ["Executor.UrlProtocolOpened"] = "已打开链接/系统协议",
+        ["Executor.TerminalLaunched"] = "命令已在新窗口启动"
     };
 
     private static readonly Dictionary<string, string> _enStrings = new(StringComparer.OrdinalIgnoreCase)
@@ -838,6 +935,21 @@ Uninstalling CmdDock via Windows Settings or Microsoft Store completely removes 
         ["Mockup.GitStatus"] = "Git Status",
         ["Mockup.CleanTemp"] = "Clean Temp",
         ["Mockup.IpDetails"] = "IP Details",
-        ["Mockup.NodeVersion"] = "Node Version"
+        ["Mockup.NodeVersion"] = "Node Version",
+
+        // Status & Execution Messages
+        ["Status.Ready"] = "Ready",
+        ["Status.Executing"] = "Executing: {0}...",
+        ["Status.ExecSuccess"] = "✓ {0} executed successfully ({1}ms)",
+        ["Status.ExecFailed"] = "✗ {0} failed (code {1})",
+        ["Status.Deleted"] = "Deleted command: {0}",
+        ["Status.AddedToWidget"] = "Added to widget: {0}",
+        ["Status.HiddenFromWidget"] = "Hidden from widget: {0}",
+        ["Status.PresetAdded"] = "Preset command added: {0} and synced to widget",
+        ["Status.LogsCleared"] = "Execution history logs cleared",
+        ["Status.Saved"] = "Saved command: {0}",
+        ["Executor.LaunchException"] = "Failed to launch command: {0}",
+        ["Executor.UrlProtocolOpened"] = "Opened URL / system protocol",
+        ["Executor.TerminalLaunched"] = "Command launched in terminal window"
     };
 }

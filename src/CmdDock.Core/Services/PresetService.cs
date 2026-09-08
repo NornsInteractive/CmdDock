@@ -33,7 +33,7 @@ public class PresetService : IPresetService
                 Group = "系统",
                 IconGlyph = "\uE74D", // Delete / Clear
                 ShellType = ShellType.PowerShell,
-                CommandText = "Remove-Item \"$env:TEMP\\*\" -Recurse -Force -ErrorAction SilentlyContinue",
+                CommandText = "Get-ChildItem -Path $env:TEMP -Force -ErrorAction SilentlyContinue | ForEach-Object { try { Remove-Item $_.FullName -Recurse -Force -ErrorAction Stop } catch { } }; exit 0",
                 ExecutionMode = ExecutionMode.Silent,
                 RequireConfirmation = false,
                 ShowInWidget = true,

@@ -51,6 +51,24 @@ public class CommandService : ICommandService
 
             var text = await File.ReadAllTextAsync(AppPaths.CommandsFilePath);
             var loaded = JsonSerializer.Deserialize<List<CommandItem>>(text, JsonOptions) ?? new List<CommandItem>();
+            bool modified = false;
+            foreach (var cmd in loaded)
+            {
+                if (cmd.CommandText != null && cmd.CommandText.Contains("$env:TEMP") && (cmd.CommandText.Contains("Remove-Item") || cmd.Id == "preset_clean_temp" || cmd.Name == "清理系统临时文件" || cmd.Name == "Clean Temp Files"))
+                {
+                    cmd.CommandText = "Get-ChildItem -Path $env:TEMP -Force -ErrorAction SilentlyContinue | ForEach-Object { try { Remove-Item $_.FullName -Recurse -Force -ErrorAction Stop } catch { } }; exit 0";
+                    modified = true;
+                }
+            }
+            if (modified)
+            {
+                try
+                {
+                    var updatedJson = JsonSerializer.Serialize(loaded, JsonOptions);
+                    await File.WriteAllTextAsync(AppPaths.CommandsFilePath, updatedJson);
+                }
+                catch { }
+            }
             _cachedCommands = loaded;
             _lastLoadedTime = File.GetLastWriteTimeUtc(AppPaths.CommandsFilePath);
             return _cachedCommands.OrderBy(c => c.Order).ToList();

@@ -231,5 +231,75 @@ public class AppSettingsAndI18nTests
             service.CurrentLanguage = original;
         }
     }
+
+    [Fact]
+    public void I18nService_StatusMessages_ShouldSupportBilingualAndFormatting()
+    {
+        var service = I18nService.Instance;
+        var original = service.CurrentLanguage;
+        try
+        {
+            // Chinese
+            service.CurrentLanguage = AppSettingsService.LanguageChinese;
+            Assert.Equal("就绪", service["Status.Ready"]);
+            Assert.Equal("正在执行: 清理系统临时文件...", service.Format("Status.Executing", "清理系统临时文件"));
+            Assert.Equal("✓ 清理系统临时文件 执行成功 (120ms)", service.Format("Status.ExecSuccess", "清理系统临时文件", 120));
+            Assert.Equal("✗ 清理系统临时文件 执行失败 (代码 1)", service.Format("Status.ExecFailed", "清理系统临时文件", 1));
+            Assert.Equal("已删除命令: 测试", service.Format("Status.Deleted", "测试"));
+            Assert.Equal("已添加到小组件: 测试", service.Format("Status.AddedToWidget", "测试"));
+            Assert.Equal("已从小组件隐藏: 测试", service.Format("Status.HiddenFromWidget", "测试"));
+            Assert.Equal("已添加预设命令: 测试 并同步至小组件", service.Format("Status.PresetAdded", "测试"));
+            Assert.Equal("已清空执行日志", service["Status.LogsCleared"]);
+            Assert.Equal("已保存命令: 测试", service.Format("Status.Saved", "测试"));
+
+            // English
+            service.CurrentLanguage = AppSettingsService.LanguageEnglish;
+            Assert.Equal("Ready", service["Status.Ready"]);
+            Assert.Equal("Executing: Clean Temp Files...", service.Format("Status.Executing", "Clean Temp Files"));
+            Assert.Equal("✓ Clean Temp Files executed successfully (120ms)", service.Format("Status.ExecSuccess", "Clean Temp Files", 120));
+            Assert.Equal("✗ Clean Temp Files failed (code 1)", service.Format("Status.ExecFailed", "Clean Temp Files", 1));
+            Assert.Equal("Deleted command: Test", service.Format("Status.Deleted", "Test"));
+            Assert.Equal("Added to widget: Test", service.Format("Status.AddedToWidget", "Test"));
+            Assert.Equal("Hidden from widget: Test", service.Format("Status.HiddenFromWidget", "Test"));
+            Assert.Equal("Preset command added: Test and synced to widget", service.Format("Status.PresetAdded", "Test"));
+            Assert.Equal("Execution history logs cleared", service["Status.LogsCleared"]);
+            Assert.Equal("Saved command: Test", service.Format("Status.Saved", "Test"));
+        }
+        finally
+        {
+            service.CurrentLanguage = original;
+        }
+    }
+
+    [Fact]
+    public void CommandItem_WithGuidId_ShouldResolvePresetLocalizedNameAndDescription()
+    {
+        var service = I18nService.Instance;
+        var original = service.CurrentLanguage;
+        try
+        {
+            // Simulate an item created with a GUID but based on preset Clean Temp Files
+            var cmd = new CmdDock.Core.Models.CommandItem
+            {
+                Id = "e90461e131074fbd8e06df7a7f95c1e0",
+                Name = "清理系统临时文件",
+                Description = "深度清空当前用户的临时垃圾与缓存目录，释放磁盘空间"
+            };
+
+            // Chinese
+            service.CurrentLanguage = AppSettingsService.LanguageChinese;
+            Assert.Equal("清理系统临时文件", cmd.DisplayName);
+            Assert.Equal("深度清空当前用户的临时垃圾与缓存目录，释放磁盘空间", cmd.DisplayDescription);
+
+            // English
+            service.CurrentLanguage = AppSettingsService.LanguageEnglish;
+            Assert.Equal("Clean Temp Files", cmd.DisplayName);
+            Assert.Contains("Deep clean current user temporary cache", cmd.DisplayDescription);
+        }
+        finally
+        {
+            service.CurrentLanguage = original;
+        }
+    }
 }
 

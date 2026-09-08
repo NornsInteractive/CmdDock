@@ -112,7 +112,7 @@ public partial class CommandItem : ObservableObject
     public string DisplayName => CmdDock.Core.Services.I18nService.Instance.GetPresetLocalizedName(Id, Name);
 
     [JsonIgnore]
-    public string DisplayDescription => CmdDock.Core.Services.I18nService.Instance.GetPresetLocalizedDescription(Id, Description);
+    public string DisplayDescription => CmdDock.Core.Services.I18nService.Instance.GetPresetLocalizedDescription(Id, Description, Name);
 
     [JsonIgnore]
     public string DisplayGroup => CmdDock.Core.Services.I18nService.Instance.TranslateCategory(Group);

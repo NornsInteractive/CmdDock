@@ -32,7 +32,7 @@ public partial class MainViewModel : ObservableObject
     private bool _isLoading;
 
     [ObservableProperty]
-    private string _statusMessage = "就绪";
+    private string _statusMessage = I18nService.Instance["Status.Ready"];
 
     private readonly IPresetService _presetService;
     private readonly ICommandService _commandService;
@@ -45,6 +45,7 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel()
     {
+        _statusMessage = I18nService.Instance["Status.Ready"];
         _presetService = new PresetService();
         _commandService = new CommandService(_presetService);
         _categoryService = new CategoryService(commandService: _commandService);
@@ -52,6 +53,13 @@ public partial class MainViewModel : ObservableObject
         _commandExecutor = new CommandExecutor(_commandService, _logService);
 
         _logService.LogsUpdated += (_, _) => _ = RefreshLogsAsync();
+        I18nService.Instance.LanguageChanged += () =>
+        {
+            if (StatusMessage == "就绪" || StatusMessage == "Ready")
+            {
+                StatusMessage = I18nService.Instance["Status.Ready"];
+            }
+        };
     }
 
     [RelayCommand]
@@ -255,14 +263,14 @@ public partial class MainViewModel : ObservableObject
     {
         if (item == null) return;
 
-        StatusMessage = $"正在执行: {item.Name}...";
+        StatusMessage = I18nService.Instance.Format("Status.Executing", item.DisplayName);
         item.LastRunStatus = ExecutionStatus.Running;
 
         var result = await _commandExecutor.ExecuteAsync(item);
 
         StatusMessage = result.Success 
-            ? $"✓ {item.Name} 执行成功 ({result.DurationMs}ms)" 
-            : $"✗ {item.Name} 执行失败 (代码 {result.ExitCode})";
+            ? I18nService.Instance.Format("Status.ExecSuccess", item.DisplayName, result.DurationMs) 
+            : I18nService.Instance.Format("Status.ExecFailed", item.DisplayName, result.ExitCode);
 
         await RefreshLogsAsync();
         WidgetNotificationService.NotifyWidgets(Commands);
@@ -278,7 +286,7 @@ public partial class MainViewModel : ObservableObject
 
         await _commandService.DeleteAsync(item.Id);
 
-        StatusMessage = $"已删除命令: {item.Name}";
+        StatusMessage = I18nService.Instance.Format("Status.Deleted", item.DisplayName);
         WidgetNotificationService.NotifyWidgets(Commands);
     }
 
@@ -289,7 +297,9 @@ public partial class MainViewModel : ObservableObject
 
         await _commandService.AddOrUpdateAsync(item);
 
-        StatusMessage = item.ShowInWidget ? $"已添加到小组件: {item.Name}" : $"已从小组件隐藏: {item.Name}";
+        StatusMessage = item.ShowInWidget 
+            ? I18nService.Instance.Format("Status.AddedToWidget", item.DisplayName) 
+            : I18nService.Instance.Format("Status.HiddenFromWidget", item.DisplayName);
         WidgetNotificationService.NotifyWidgets(Commands);
     }
 
@@ -329,7 +339,7 @@ public partial class MainViewModel : ObservableObject
 
         await _commandService.AddOrUpdateAsync(newItem);
 
-        StatusMessage = $"已添加预设命令: {newItem.Name} 并同步至小组件";
+        StatusMessage = I18nService.Instance.Format("Status.PresetAdded", newItem.DisplayName);
         WidgetNotificationService.NotifyWidgets(Commands);
     }
 
@@ -338,7 +348,7 @@ public partial class MainViewModel : ObservableObject
     {
         await _logService.ClearLogsAsync();
         Logs.Clear();
-        StatusMessage = "已清空执行日志";
+        StatusMessage = I18nService.Instance["Status.LogsCleared"];
     }
 
     public async Task SaveCommandAsync(CommandItem item)
@@ -383,7 +393,7 @@ public partial class MainViewModel : ObservableObject
 
         await _commandService.AddOrUpdateAsync(item);
 
-        StatusMessage = $"已保存命令: {item.Name}";
+        StatusMessage = I18nService.Instance.Format("Status.Saved", item.DisplayName);
         WidgetNotificationService.NotifyWidgets(Commands);
     }
 }

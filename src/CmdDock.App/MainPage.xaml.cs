@@ -734,7 +734,8 @@ public sealed partial class MainPage : Page
         if (string.Equals(ViewModel.StatusMessage, "就绪", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(ViewModel.StatusMessage, "Ready", StringComparison.OrdinalIgnoreCase))
         {
-            StatusBarText.Text = i18n["Commands.StatusReady"];
+            ViewModel.StatusMessage = i18n["Status.Ready"];
+            StatusBarText.Text = i18n["Status.Ready"];
         }
     }
 }

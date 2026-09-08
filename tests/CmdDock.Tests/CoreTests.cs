@@ -47,6 +47,23 @@ public class CoreTests
     }
 
     [Fact]
+    public async Task PresetCleanTemp_ShouldExecuteSuccessfullyWithExitCodeZero()
+    {
+        var presetService = new PresetService();
+        var presets = presetService.GetBuiltinPresets();
+        var cleanTempPreset = presets.FirstOrDefault(p => p.Id == "preset_clean_temp");
+        Assert.NotNull(cleanTempPreset);
+
+        var commandService = new CommandService(presetService);
+        var logService = new LogService();
+        var executor = new CommandExecutor(commandService, logService);
+
+        var result = await executor.ExecuteAsync(cleanTempPreset);
+        Assert.True(result.Success, $"Clean Temp Files failed with error: {result.StdErr}");
+        Assert.Equal(0, result.ExitCode);
+    }
+
+    [Fact]
     public async Task CommandExecutor_ShouldHandleNonZeroExitCode()
     {
         var commandService = new CommandService();

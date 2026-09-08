@@ -38,8 +38,8 @@ public class CommandExecutor : ICommandExecutor
             stopwatch.Stop();
             result = ExecutionResult.Failed(
                 item.Id,
-                item.Name,
-                $"启动命令发生异常: {ex.Message}",
+                item.DisplayName,
+                I18nService.Instance.Format("Executor.LaunchException", ex.Message),
                 stopwatch.ElapsedMilliseconds,
                 -1);
         }
@@ -52,7 +52,7 @@ public class CommandExecutor : ICommandExecutor
         await _logService.AppendLogAsync(new ExecutionLogEntry
         {
             CommandId = item.Id,
-            CommandName = item.Name,
+            CommandName = item.DisplayName,
             ShellType = item.ShellType.ToString(),
             CommandText = item.CommandText,
             ExecutionMode = item.ExecutionMode.ToString(),
@@ -76,7 +76,7 @@ public class CommandExecutor : ICommandExecutor
 
         Process.Start(psi);
         stopwatch.Stop();
-        return ExecutionResult.Succeeded(item.Id, item.Name, "已打开链接/系统协议", stopwatch.ElapsedMilliseconds);
+        return ExecutionResult.Succeeded(item.Id, item.DisplayName, I18nService.Instance["Executor.UrlProtocolOpened"], stopwatch.ElapsedMilliseconds);
     }
 
     private async Task<ExecutionResult> ExecuteProcessAsync(CommandItem item, Stopwatch stopwatch, CancellationToken cancellationToken)
@@ -132,12 +132,12 @@ public class CommandExecutor : ICommandExecutor
 
             if (process.ExitCode == 0)
             {
-                return ExecutionResult.Succeeded(item.Id, item.Name, stdout, stopwatch.ElapsedMilliseconds, process.ExitCode);
+                return ExecutionResult.Succeeded(item.Id, item.DisplayName, stdout, stopwatch.ElapsedMilliseconds, process.ExitCode);
             }
             else
             {
                 var errorMsg = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
-                return ExecutionResult.Failed(item.Id, item.Name, errorMsg, stopwatch.ElapsedMilliseconds, process.ExitCode, stdout);
+                return ExecutionResult.Failed(item.Id, item.DisplayName, errorMsg, stopwatch.ElapsedMilliseconds, process.ExitCode, stdout);
             }
         }
         else
@@ -148,8 +148,8 @@ public class CommandExecutor : ICommandExecutor
 
             return ExecutionResult.Succeeded(
                 item.Id,
-                item.Name,
-                "命令已在新窗口启动",
+                item.DisplayName,
+                I18nService.Instance["Executor.TerminalLaunched"],
                 stopwatch.ElapsedMilliseconds,
                 0);
         }
