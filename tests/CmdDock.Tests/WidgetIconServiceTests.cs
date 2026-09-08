@@ -244,6 +244,11 @@ public class WidgetIconServiceTests
         var gitCfg = presets.FirstOrDefault(p => p.Id == "preset_git_config");
         Assert.NotNull(gitCfg);
         Assert.Contains("Git", gitCfg.Description);
+
+        var clearClip = presets.FirstOrDefault(p => p.Id == "preset_clear_clipboard");
+        Assert.NotNull(clearClip);
+        Assert.Equal(CmdDock.Core.Models.ShellType.Cmd, clearClip.ShellType);
+        Assert.Contains("clip", clearClip.CommandText);
     }
 
     [Fact]

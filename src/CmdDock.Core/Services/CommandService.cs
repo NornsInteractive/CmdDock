@@ -76,6 +76,12 @@ public class CommandService : ICommandService
                     cmd.CommandText = "start rundll32.exe sysdm.cpl,EditEnvironmentVariables";
                     modified = true;
                 }
+                if (cmd.CommandText != null && (cmd.CommandText.Contains("Set-Clipboard") || cmd.Id == "preset_clear_clipboard" || cmd.Name == "清空系统剪贴板" || cmd.Name == "清空剪贴板" || cmd.Name == "Clear Clipboard"))
+                {
+                    cmd.ShellType = ShellType.Cmd;
+                    cmd.CommandText = "type nul | clip";
+                    modified = true;
+                }
                 // Automatically clear stale execution status badges on load
                 if (cmd.LastRunStatus != ExecutionStatus.Idle && cmd.LastRunStatus != ExecutionStatus.Running)
                 {

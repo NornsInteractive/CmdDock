@@ -46,8 +46,8 @@ public class PresetService : IPresetService
                 Description = "清理当前系统剪贴板中的敏感复制内容与图片数据",
                 Group = "系统",
                 IconGlyph = "\uE77F", // Clipboard
-                ShellType = ShellType.PowerShell,
-                CommandText = "Set-Clipboard -Value ''",
+                ShellType = ShellType.Cmd,
+                CommandText = "type nul | clip",
                 ExecutionMode = ExecutionMode.Silent,
                 RequireConfirmation = false,
                 ShowInWidget = true,
