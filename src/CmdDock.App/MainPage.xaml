@@ -742,7 +742,7 @@
                             Padding="20">
                             <StackPanel Spacing="8">
                                 <TextBlock x:Name="WidgetAboutTitle" Text="关于 CmdDock" FontWeight="SemiBold" FontSize="16" />
-                                <TextBlock x:Name="WidgetAboutVersion" Text="版本: 1.0.0 (Windows App SDK + .NET 8)" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Name="WidgetAboutVersion" Text="版本: 1.0.2.0 (Windows App SDK + .NET 8)" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <TextBlock x:Name="WidgetAboutTech" Text="技术规范: Microsoft.Windows.Widgets.Providers / Adaptive Cards 1.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <TextBlock x:Name="WidgetAboutStore" Text="Microsoft Store 认证就绪: 具备 runFullTrust 权限声明与隔离沙箱支持" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
@@ -837,7 +837,7 @@
                                     <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
                                         <TextBlock Text="CmdDock" FontWeight="Bold" FontSize="16" />
                                         <TextBlock x:Name="SettingsAboutDescText" Text="现代化 Windows 11 快捷命令停泊坞与桌面小组件" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        <TextBlock x:Name="SettingsVersionText" Text="版本: 1.0.0.2 (Windows App SDK + .NET 8)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock x:Name="SettingsVersionText" Text="版本: 1.0.2.0 (Windows App SDK + .NET 8)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         <TextBlock x:Name="SettingsTechStackText" Text="技术规范: Microsoft.Windows.Widgets.Providers / Adaptive Cards 1.5" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                     </StackPanel>
                                 </Grid>
