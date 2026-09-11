@@ -26,6 +26,8 @@ public static class AppPaths
 
     public static string AppSettingsFilePath => Path.Combine(BaseDirectory, "app_settings.json");
 
+    public static string DockSettingsFilePath => Path.Combine(BaseDirectory, "dock_settings.json");
+
     public static string LogsDirectory
     {
         get

@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="CmdDock_App.Views.MiniDockPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:CmdDock_App.Converters"
+    xmlns:models="using:CmdDock.Core.Models"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:ImagePathConverter x:Key="ImagePathConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <converters:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
+    </Page.Resources>
+
+    <Grid x:Name="RootLayout" PointerEntered="RootLayout_PointerEntered" PointerExited="RootLayout_PointerExited">
+        <!-- Background with Acrylic & customizable opacity -->
+        <Border x:Name="BackgroundBackdrop"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="10" />
+
+        <!-- ========================================================================= -->
+        <!-- VIEW 1: CARD DECK MODE (卡片控制面板模式)                                   -->
+        <!-- ========================================================================= -->
+        <Grid x:Name="CardDeckContainer" Visibility="Visible" Padding="12">
+            <Grid.RowDefinitions>
+                <!-- 0: Header & Controls -->
+                <RowDefinition Height="Auto" />
+                <!-- 1: Search & Category Pills -->
+                <RowDefinition Height="Auto" />
+                <!-- 2: Command Cards List -->
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Top Header & Drag Region -->
+            <Grid Grid.Row="0"
+                  x:Name="CardHeader"
+                  Background="Transparent"
+                  PointerPressed="Header_PointerPressed"
+                  DoubleTapped="Header_DoubleTapped"
+                  Padding="4,0,4,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Drag Handle & Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xE765;" FontSize="13" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <TextBlock Text="CmdDock" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Action Toolbar -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                    <!-- Toggle Dock Mode -->
+                    <Button x:Name="ModeSwitchBtn"
+                            Width="28" Height="28" Padding="0"
+                            ToolTipService.ToolTip="切换为紧凑 Dock 条模式"
+                            Click="ModeSwitchBtn_Click">
+                        <FontIcon Glyph="&#xE8A9;" FontSize="12" />
+                    </Button>
+
+                    <!-- Toggle Pin Mode -->
+                    <Button x:Name="PinModeBtn"
+                            Width="28" Height="28" Padding="0"
+                            ToolTipService.ToolTip="图钉模式 (置顶 / 沉入桌面 / 普通)"
+                            Click="PinModeBtn_Click">
+                        <FontIcon x:Name="PinModeIcon" Glyph="&#xE718;" FontSize="12" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    </Button>
+
+                    <!-- Settings Flyout -->
+                    <Button x:Name="SettingsBtn"
+                            Width="28" Height="28" Padding="0"
+                            ToolTipService.ToolTip="小窗口样式与设置">
+                        <FontIcon Glyph="&#xE713;" FontSize="12" />
+                        <Button.Flyout>
+                            <Flyout>
+                                <StackPanel Width="220" Spacing="12">
+                                    <TextBlock Text="小窗口设置" FontWeight="SemiBold" FontSize="14" />
+
+                                    <!-- Opacity Slider -->
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="窗口不透明度" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <Slider x:Name="OpacitySlider" Minimum="30" Maximum="100" Value="95" ValueChanged="OpacitySlider_ValueChanged" />
+                                    </StackPanel>
+
+                                    <!-- Card Scale -->
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="卡片缩放" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <ComboBox x:Name="CardScaleCombo" HorizontalAlignment="Stretch" SelectionChanged="CardScaleCombo_SelectionChanged">
+                                            <ComboBoxItem Content="紧凑小" Tag="Small" />
+                                            <ComboBoxItem Content="标准中" Tag="Medium" IsSelected="True" />
+                                            <ComboBoxItem Content="宽阔大" Tag="Large" />
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <!-- Auto-Hide Toggle -->
+                                    <ToggleSwitch x:Name="AutoHideSwitch"
+                                                  Header="贴边自动隐藏"
+                                                  FontSize="12"
+                                                  Toggled="AutoHideSwitch_Toggled" />
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <!-- Expand to Full View -->
+                    <Button x:Name="ExpandBtn"
+                            Width="28" Height="28" Padding="0"
+                            ToolTipService.ToolTip="展开为完整管理视图"
+                            Click="ExpandBtn_Click">
+                        <FontIcon Glyph="&#xE740;" FontSize="12" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Search Bar & Category Pills -->
+            <StackPanel Grid.Row="1" Spacing="8" Margin="0,0,0,8">
+                <!-- Search Box -->
+                <TextBox x:Name="SearchBox"
+                         PlaceholderText="搜索快捷命令..."
+                         FontSize="12"
+                         TextChanged="SearchBox_TextChanged"
+                         HorizontalAlignment="Stretch" />
+
+                <!-- Category Pills (Horizontal Scroll) -->
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              HorizontalScrollMode="Enabled"
+                              VerticalScrollMode="Disabled">
+                    <StackPanel x:Name="CategoryPillsPanel" Orientation="Horizontal" Spacing="6" />
+                </ScrollViewer>
+            </StackPanel>
+
+            <!-- Command Cards Scroll Area -->
+            <ScrollViewer Grid.Row="2"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="CardsItemsControl">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:CommandItem">
+                            <Button HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    Margin="0,0,0,6"
+                                    Padding="10,8"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Click="CommandCard_Click"
+                                    RightTapped="CommandCard_RightTapped">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Icon -->
+                                    <Grid Grid.Column="0" Width="28" Height="28" VerticalAlignment="Center">
+                                        <!-- Segoe Glyph Icon -->
+                                        <FontIcon Glyph="{x:Bind DisplayIcon}"
+                                                  FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                  FontSize="18"
+                                                  Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                  Visibility="{x:Bind GlyphVisibility}" />
+                                        <!-- Custom Image/SVG Icon -->
+                                        <Image Source="{x:Bind IconGlyph, Converter={StaticResource ImagePathConverter}}"
+                                               Width="24" Height="24"
+                                               Visibility="{x:Bind ImageVisibility}" />
+                                    </Grid>
+
+                                    <!-- Name & Description -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Text="{x:Bind DisplayName}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="13"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{x:Bind DisplayDescription}"
+                                                   FontSize="11"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+
+                                    <!-- Status Indicator & Feedback -->
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                                        <!-- Running Spinner -->
+                                        <ProgressRing IsActive="{x:Bind IsRunning}"
+                                                      Width="18" Height="18"
+                                                      Visibility="{x:Bind IsRunning, Converter={StaticResource BoolToVisibility}}" />
+
+                                        <!-- Success Badge -->
+                                        <FontIcon Glyph="&#xE73E;"
+                                                  FontSize="14"
+                                                  Foreground="#10B981"
+                                                  Visibility="{x:Bind ShowSuccessIcon, Converter={StaticResource BoolToVisibility}}" />
+
+                                        <!-- Failed Badge -->
+                                        <FontIcon Glyph="&#xE783;"
+                                                  FontSize="14"
+                                                  Foreground="#EF4444"
+                                                  Visibility="{x:Bind ShowFailedIcon, Converter={StaticResource BoolToVisibility}}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ========================================================================= -->
+        <!-- VIEW 2: COMPACT DOCK BAR MODE (紧凑 Dock 条模式)                           -->
+        <!-- ========================================================================= -->
+        <Grid x:Name="DockBarContainer" Visibility="Collapsed" Padding="6">
+            <StackPanel x:Name="DockBarStack" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <!-- Drag Handle & Controls on Dock Bar -->
+                <Button x:Name="DockBarHandleBtn"
+                        Width="28" Height="28" Padding="0"
+                        PointerPressed="Header_PointerPressed"
+                        DoubleTapped="Header_DoubleTapped"
+                        ToolTipService.ToolTip="按住拖动 / 双击展开大窗口">
+                    <FontIcon Glyph="&#xE765;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </Button>
+
+                <Button x:Name="DockBarSwitchModeBtn"
+                        Width="28" Height="28" Padding="0"
+                        ToolTipService.ToolTip="切换为卡片面板模式"
+                        Click="ModeSwitchBtn_Click">
+                    <FontIcon Glyph="&#xE7FB;" FontSize="11" />
+                </Button>
+
+                <Rectangle x:Name="DockBarSeparator" Width="1" Height="18" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="2,0" />
+
+                <!-- Dock Bar Items Collection -->
+                <ItemsControl x:Name="DockBarItemsControl">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel x:Name="DockItemsPanel" Orientation="Horizontal" Spacing="4" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:CommandItem">
+                            <Button Width="36" Height="36" Padding="0"
+                                    ToolTipService.ToolTip="{x:Bind DisplayName}"
+                                    CornerRadius="6"
+                                    Click="CommandCard_Click"
+                                    RightTapped="CommandCard_RightTapped">
+                                <Grid>
+                                    <FontIcon Glyph="{x:Bind DisplayIcon}"
+                                              FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                              FontSize="16"
+                                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                              Visibility="{x:Bind GlyphVisibility}" />
+                                    <Image Source="{x:Bind IconGlyph, Converter={StaticResource ImagePathConverter}}"
+                                           Width="20" Height="20"
+                                           Visibility="{x:Bind ImageVisibility}" />
+
+                                    <!-- Mini Badge indicator on corner -->
+                                    <ProgressRing IsActive="{x:Bind IsRunning}"
+                                                  Width="12" Height="12"
+                                                  HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                  Margin="0,-2,-2,0"
+                                                  Visibility="{x:Bind IsRunning, Converter={StaticResource BoolToVisibility}}" />
+                                    <FontIcon Glyph="&#xE73E;"
+                                              FontSize="10" Foreground="#10B981"
+                                              HorizontalAlignment="Right" VerticalAlignment="Top"
+                                              Margin="0,-2,-2,0"
+                                              Visibility="{x:Bind ShowSuccessIcon, Converter={StaticResource BoolToVisibility}}" />
+                                    <FontIcon Glyph="&#xE783;"
+                                              FontSize="10" Foreground="#EF4444"
+                                              HorizontalAlignment="Right" VerticalAlignment="Top"
+                                              Margin="0,-2,-2,0"
+                                              Visibility="{x:Bind ShowFailedIcon, Converter={StaticResource BoolToVisibility}}" />
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Grid>
+
+        <!-- Parameter Input Dialog / Flyout Container -->
+        <ContentDialog x:Name="ParamInputDialog"
+                       Title="执行参数输入"
+                       PrimaryButtonText="执行"
+                       CloseButtonText="取消"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="10">
+                <TextBlock x:Name="ParamDialogPrompt" Text="该命令需要动态参数，请输入后执行：" FontSize="13" />
+                <TextBox x:Name="ParamInputTextBox" PlaceholderText="输入参数..." />
+            </StackPanel>
+        </ContentDialog>
+    </Grid>
+</Page>

@@ -65,6 +65,10 @@ public partial class CommandItem : ObservableObject
     private DateTime? _lastRunTime;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsRunning))]
+    [NotifyPropertyChangedFor(nameof(ShowSuccessIcon))]
+    [NotifyPropertyChangedFor(nameof(ShowFailedIcon))]
+    [NotifyPropertyChangedFor(nameof(HasStatusBadge))]
     private ExecutionStatus _lastRunStatus = ExecutionStatus.Idle;
 
     [ObservableProperty]
@@ -72,6 +76,23 @@ public partial class CommandItem : ObservableObject
 
     [ObservableProperty]
     private int? _lastExitCode;
+
+    [JsonIgnore]
+    public bool IsRunning => LastRunStatus == ExecutionStatus.Running;
+
+    [JsonIgnore]
+    public bool ShowSuccessIcon => LastRunStatus == ExecutionStatus.Success;
+
+    [JsonIgnore]
+    public bool ShowFailedIcon => LastRunStatus == ExecutionStatus.Failed;
+
+    [JsonIgnore]
+    public bool HasStatusBadge => LastRunStatus != ExecutionStatus.Idle;
+
+    [JsonIgnore]
+    public bool HasParameters => 
+        (!string.IsNullOrEmpty(CommandText) && CommandText.Contains('{') && CommandText.Contains('}')) ||
+        (!string.IsNullOrEmpty(Arguments) && Arguments.Contains('{') && Arguments.Contains('}'));
 
     public CommandItem()
     {

@@ -1,6 +1,8 @@
 using CmdDock.Core.Services;
 using Microsoft.UI.Xaml;
 
+using CmdDock_App.Services;
+
 namespace CmdDock_App;
 
 public sealed partial class MainWindow : Window
@@ -20,9 +22,21 @@ public sealed partial class MainWindow : Window
             DispatcherQueue.TryEnqueue(UpdateTitle);
         };
 
-        // Navigate the root frame to the main page on startup.
-        RootFrame.Navigate(typeof(MainPage));
+        WindowMorphService.Instance.Initialize(this);
+
+        var dockSettings = MiniDockSettingsService.Instance.LoadSettings();
+        if (dockSettings.StartupView == "mini")
+        {
+            WindowMorphService.Instance.SwitchToMiniDock();
+        }
+        else
+        {
+            RootFrame.Navigate(typeof(MainPage));
+        }
     }
+
+    public UIElement TitleBarControl => AppTitleBar;
+    public Microsoft.UI.Xaml.Controls.Frame ContentFrame => RootFrame;
 
     private void UpdateTitle()
     {

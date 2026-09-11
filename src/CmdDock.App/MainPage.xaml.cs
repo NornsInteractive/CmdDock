@@ -559,9 +559,54 @@ public sealed partial class MainPage : Page
                 }
             }
 
+            var dockSettings = MiniDockSettingsService.Instance.LoadSettings();
+            foreach (ComboBoxItem item in StartupViewSettingCombo.Items)
+            {
+                if (string.Equals(item.Tag?.ToString(), dockSettings.StartupView, StringComparison.OrdinalIgnoreCase))
+                {
+                    StartupViewSettingCombo.SelectedItem = item;
+                    break;
+                }
+            }
+            foreach (ComboBoxItem item in DefaultDockModeSettingCombo.Items)
+            {
+                if (string.Equals(item.Tag?.ToString(), dockSettings.DockMode.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    DefaultDockModeSettingCombo.SelectedItem = item;
+                    break;
+                }
+            }
+
             SettingsDataFolderPath.Text = AppPaths.BaseDirectory;
         }
         catch { }
+    }
+
+    private void SwitchToMiniDockBtn_Click(object sender, RoutedEventArgs e)
+    {
+        CmdDock_App.Services.WindowMorphService.Instance.SwitchToMiniDock();
+    }
+
+    private void StartupViewSettingCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_isPageLoaded) return;
+        if (StartupViewSettingCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+        {
+            var dockSettings = MiniDockSettingsService.Instance.LoadSettings();
+            dockSettings.StartupView = tag;
+            MiniDockSettingsService.Instance.SaveSettings(dockSettings);
+        }
+    }
+
+    private void DefaultDockModeSettingCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_isPageLoaded) return;
+        if (DefaultDockModeSettingCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+        {
+            var dockSettings = MiniDockSettingsService.Instance.LoadSettings();
+            dockSettings.DockMode = tag == "DockBar" ? MiniDockMode.DockBar : MiniDockMode.CardDeck;
+            MiniDockSettingsService.Instance.SaveSettings(dockSettings);
+        }
     }
 
     private void ThemeSettingCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -624,6 +669,8 @@ public sealed partial class MainPage : Page
         AddCommandBtnText.Text = i18n["Commands.New"];
         RefreshBtnText.Text = i18n["Commands.Refresh"];
         ManageCategoriesBtnText.Text = i18n["Commands.CategoryManage"];
+        SwitchToMiniDockBtnText.Text = i18n["MiniDock.SwitchToMini"];
+        ToolTipService.SetToolTip(SwitchToMiniDockBtn, i18n["MiniDock.SwitchToMini"]);
         ToolTipService.SetToolTip(GroupFilterCombo, i18n["Commands.CategoryFilterToolTip"]);
         ToolTipService.SetToolTip(ManageCategoriesBtn, i18n["Commands.CategoryManageToolTip"]);
         EmptyCommandsTitle.Text = i18n["Commands.EmptyTip"];

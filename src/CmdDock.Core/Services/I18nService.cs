@@ -584,7 +584,32 @@ public class I18nService
         ["Status.Saved"] = "已保存命令: {0}",
         ["Executor.LaunchException"] = "启动命令发生异常: {0}",
         ["Executor.UrlProtocolOpened"] = "已打开链接/系统协议",
-        ["Executor.TerminalLaunched"] = "命令已在新窗口启动"
+        ["Executor.TerminalLaunched"] = "命令已在新窗口启动",
+
+        // Mini Dock & Desktop Pinning
+        ["MiniDock.SwitchToMini"] = "切换为桌面小窗口",
+        ["MiniDock.ExpandToFull"] = "展开为完整管理视图",
+        ["MiniDock.ModeCard"] = "卡片控制面板模式",
+        ["MiniDock.ModeBar"] = "紧凑 Dock 条模式",
+        ["MiniDock.PinTop"] = "窗口始终置顶",
+        ["MiniDock.PinDesktop"] = "固定在桌面底层 (壁纸层)",
+        ["MiniDock.PinNormal"] = "取消固定 / 恢复普通窗口",
+        ["MiniDock.Settings"] = "小窗口与样式设置",
+        ["MiniDock.Opacity"] = "窗口不透明度",
+        ["MiniDock.Scale"] = "卡片尺寸",
+        ["MiniDock.ScaleSmall"] = "紧凑小",
+        ["MiniDock.ScaleMedium"] = "标准中",
+        ["MiniDock.ScaleLarge"] = "宽阔大",
+        ["MiniDock.AutoHide"] = "贴靠边缘自动隐藏",
+        ["MiniDock.SearchPlaceholder"] = "搜索命令...",
+        ["MiniDock.ParamTitle"] = "执行参数输入",
+        ["MiniDock.ParamPrompt"] = "该命令包含动态占位参数，请输入后执行：",
+        ["MiniDock.ParamExecute"] = "确认并执行",
+        ["MiniDock.LatestLogTitle"] = "最近一次执行结果",
+        ["MiniDock.NoLogs"] = "暂无执行记录",
+        ["Settings.StartupView"] = "启动应用时默认视图",
+        ["Settings.StartupViewFull"] = "完整管理窗口 (默认)",
+        ["Settings.StartupViewMini"] = "桌面小窗口 / Dock 栏"
     };
 
     private static readonly Dictionary<string, string> _enStrings = new(StringComparer.OrdinalIgnoreCase)
@@ -950,6 +975,31 @@ Uninstalling CmdDock via Windows Settings or Microsoft Store completely removes 
         ["Status.Saved"] = "Saved command: {0}",
         ["Executor.LaunchException"] = "Failed to launch command: {0}",
         ["Executor.UrlProtocolOpened"] = "Opened URL / system protocol",
-        ["Executor.TerminalLaunched"] = "Command launched in terminal window"
+        ["Executor.TerminalLaunched"] = "Command launched in terminal window",
+
+        // Mini Dock & Desktop Pinning
+        ["MiniDock.SwitchToMini"] = "Switch to Mini Dock View",
+        ["MiniDock.ExpandToFull"] = "Expand to Full Management View",
+        ["MiniDock.ModeCard"] = "Card Deck Panel Mode",
+        ["MiniDock.ModeBar"] = "Compact Dock Bar Mode",
+        ["MiniDock.PinTop"] = "Always on Top",
+        ["MiniDock.PinDesktop"] = "Pin to Desktop Layer",
+        ["MiniDock.PinNormal"] = "Unpin / Normal Window",
+        ["MiniDock.Settings"] = "Mini Dock & Style Settings",
+        ["MiniDock.Opacity"] = "Window Opacity",
+        ["MiniDock.Scale"] = "Card Size",
+        ["MiniDock.ScaleSmall"] = "Compact",
+        ["MiniDock.ScaleMedium"] = "Standard",
+        ["MiniDock.ScaleLarge"] = "Spacious",
+        ["MiniDock.AutoHide"] = "Auto-hide on Screen Edge",
+        ["MiniDock.SearchPlaceholder"] = "Search commands...",
+        ["MiniDock.ParamTitle"] = "Command Parameter Input",
+        ["MiniDock.ParamPrompt"] = "This command requires dynamic parameters. Enter below and execute:",
+        ["MiniDock.ParamExecute"] = "Execute",
+        ["MiniDock.LatestLogTitle"] = "Latest Execution Result",
+        ["MiniDock.NoLogs"] = "No execution history yet",
+        ["Settings.StartupView"] = "Default View on Startup",
+        ["Settings.StartupViewFull"] = "Full Management Window (Default)",
+        ["Settings.StartupViewMini"] = "Desktop Mini Dock"
     };
 }

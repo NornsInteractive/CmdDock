@@ -49,6 +49,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
@@ -105,8 +106,20 @@
                             </StackPanel>
                         </Button>
 
-                        <TextBlock
+                        <Button
+                            x:Name="SwitchToMiniDockBtn"
                             Grid.Column="4"
+                            Margin="8,0,0,0"
+                            Click="SwitchToMiniDockBtn_Click"
+                            ToolTipService.ToolTip="切换为桌面小窗口">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE8A7;" />
+                                <TextBlock x:Name="SwitchToMiniDockBtnText" Text="桌面小窗口" />
+                            </StackPanel>
+                        </Button>
+
+                        <TextBlock
+                            Grid.Column="5"
                             x:Name="StatusBarText"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Right"
@@ -813,6 +826,64 @@
                                         <ComboBoxItem x:Name="LangItemSystem" Tag="system" Content="跟随系统 (默认)" />
                                         <ComboBoxItem x:Name="LangItemChinese" Tag="zh-CN" Content="简体中文" />
                                         <ComboBoxItem x:Name="LangItemEnglish" Tag="en-US" Content="English" />
+                                    </ComboBox>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Mini Dock & Startup View Card -->
+                        <Border
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                            <StackPanel Spacing="16">
+                                <TextBlock Text="桌面小窗口与启动视图" FontWeight="SemiBold" FontSize="16" />
+
+                                <!-- Startup View Setting -->
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Text="启动默认视图" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock Text="选择打开 CmdDock 时默认呈现的窗口模式。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+
+                                    <ComboBox
+                                        x:Name="StartupViewSettingCombo"
+                                        Grid.Column="1"
+                                        Width="180"
+                                        VerticalAlignment="Center"
+                                        SelectionChanged="StartupViewSettingCombo_SelectionChanged">
+                                        <ComboBoxItem Tag="full" Content="完整管理大窗口 (默认)" IsSelected="True" />
+                                        <ComboBoxItem Tag="mini" Content="桌面小窗口 / Dock 栏" />
+                                    </ComboBox>
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="0,4" />
+
+                                <!-- Default Dock Form Factor -->
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Text="小窗口形态" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock Text="进入桌面小窗口时默认使用的布局外观。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+
+                                    <ComboBox
+                                        x:Name="DefaultDockModeSettingCombo"
+                                        Grid.Column="1"
+                                        Width="180"
+                                        VerticalAlignment="Center"
+                                        SelectionChanged="DefaultDockModeSettingCombo_SelectionChanged">
+                                        <ComboBoxItem Tag="CardDeck" Content="卡片控制面板模式" IsSelected="True" />
+                                        <ComboBoxItem Tag="DockBar" Content="紧凑 Dock 条模式" />
                                     </ComboBox>
                                 </Grid>
                             </StackPanel>
