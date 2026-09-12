@@ -33,11 +33,27 @@ public static class Program
             App.BringMainWindowToForeground();
         };
 
-        Microsoft.UI.Xaml.Application.Start((p) =>
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
-            var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
-            System.Threading.SynchronizationContext.SetSynchronizationContext(context);
-            new App();
-        });
+            try
+            {
+                System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] DOMAIN UNHANDLED: {e.ExceptionObject}\n");
+            }
+            catch { }
+        };
+
+        try
+        {
+            Microsoft.UI.Xaml.Application.Start((p) =>
+            {
+                var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
+                System.Threading.SynchronizationContext.SetSynchronizationContext(context);
+                new App();
+            });
+        }
+        catch (Exception ex)
+        {
+            System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] APPLICATION START CRASH: {ex}\n");
+        }
     }
 }

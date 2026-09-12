@@ -23,6 +23,7 @@ public class WindowMorphService
     private WindowViewMode _currentViewMode = WindowViewMode.FullView;
 
     public WindowViewMode CurrentViewMode => _currentViewMode;
+    public MainWindow? MainWindow => _mainWindow;
     public event Action<WindowViewMode>? ViewModeChanged;
 
     public void Initialize(MainWindow mainWindow)

@@ -22,11 +22,17 @@ namespace CmdDock_App;
 public partial class App : Application
 {
     private Window? _window;
-    public static Window? MainWindowInstance { get; private set; }
+    public static Window? MainWindowInstance { get; internal set; }
 
     public App()
     {
+        var logDir = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "CmdDock");
+        var logFile = System.IO.Path.Combine(logDir, "app_startup.log");
+        System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] App constructor entering...\n");
+
         InitializeComponent();
+
+        System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] App constructor InitializeComponent completed.\n");
 
         this.UnhandledException += (s, e) =>
         {
@@ -42,10 +48,22 @@ public partial class App : Application
 
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
-        _window = new MainWindow();
-        MainWindowInstance = _window;
-        CmdDock_App.Services.ThemeService.InitializeTheme();
-        _window.Activate();
+        var logDir = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "CmdDock");
+        var logFile = System.IO.Path.Combine(logDir, "app_startup.log");
+        System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] OnLaunched entered.\n");
+
+        try
+        {
+            _window = new MainWindow();
+            MainWindowInstance = _window;
+            CmdDock_App.Services.ThemeService.InitializeTheme();
+            _window.Activate();
+            System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Window activated successfully.\n");
+        }
+        catch (Exception ex)
+        {
+            System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] ONLAUNCHED CRASH: {ex}\n");
+        }
     }
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]

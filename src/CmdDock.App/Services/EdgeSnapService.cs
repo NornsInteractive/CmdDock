@@ -19,7 +19,8 @@ public class EdgeSnapService
     private const int SnapDistance = 25; // Snap threshold in pixels
     private const int HiddenMargin = 6;  // Pixels visible when auto-hidden
 
-    private readonly Window _window;
+    private Window? _window;
+    public Window? TargetWindow => _window ?? App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow;
     private DispatcherTimer? _autoHideTimer;
     private bool _isCurrentlyHidden;
     private SnappedEdge _lastSnappedEdge = SnappedEdge.None;
@@ -31,14 +32,17 @@ public class EdgeSnapService
     public SnappedEdge CurrentSnappedEdge => _lastSnappedEdge;
     public bool IsCurrentlyHidden => _isCurrentlyHidden;
 
-    public EdgeSnapService(Window window)
+    public EdgeSnapService(Window? window = null)
     {
         _window = window;
     }
 
     public SnappedEdge CheckAndSnap(bool applySnap = true)
     {
-        var appWindow = _window.AppWindow;
+        var window = TargetWindow;
+        if (window == null) return SnappedEdge.None;
+
+        var appWindow = window.AppWindow;
         if (appWindow == null) return SnappedEdge.None;
 
         var displayArea = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
@@ -151,7 +155,9 @@ public class EdgeSnapService
 
     private void AnimateToHidden()
     {
-        var appWindow = _window.AppWindow;
+        var window = TargetWindow;
+        if (window == null) return;
+        var appWindow = window.AppWindow;
         if (appWindow == null || _lastSnappedEdge == SnappedEdge.None || _isCurrentlyHidden) return;
 
         var displayArea = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
@@ -187,7 +193,9 @@ public class EdgeSnapService
 
     public void RestoreFromAutoHide()
     {
-        var appWindow = _window.AppWindow;
+        var window = TargetWindow;
+        if (window == null) return;
+        var appWindow = window.AppWindow;
         if (appWindow == null || !_isCurrentlyHidden) return;
 
         appWindow.Move(_restoredPosition);

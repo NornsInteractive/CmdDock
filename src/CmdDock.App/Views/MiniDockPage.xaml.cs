@@ -48,7 +48,7 @@ public sealed partial class MiniDockPage : Page
         _commandExecutor = new CommandExecutor(_commandService, _logService);
 
         _settings = MiniDockSettingsService.Instance.LoadSettings();
-        _edgeSnapService = new EdgeSnapService(App.MainWindowInstance!);
+        _edgeSnapService = new EdgeSnapService(App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow);
 
         CardsItemsControl.ItemsSource = DisplayedCommands;
         DockBarItemsControl.ItemsSource = DisplayedCommands;
@@ -67,7 +67,10 @@ public sealed partial class MiniDockPage : Page
     {
         // 1. Opacity
         BackgroundBackdrop.Opacity = Math.Clamp(_settings.Opacity, 0.3, 1.0);
+        OpacitySlider.Minimum = 30;
+        OpacitySlider.Maximum = 100;
         OpacitySlider.Value = BackgroundBackdrop.Opacity * 100;
+        OpacitySlider.ValueChanged += OpacitySlider_ValueChanged;
 
         // 2. Dock Mode (Card vs Bar)
         UpdateDockModeVisuals(_settings.DockMode);
@@ -75,9 +78,21 @@ public sealed partial class MiniDockPage : Page
         // 3. Pin Mode Visuals
         UpdatePinModeVisuals(_settings.PinMode);
 
-        // 4. Auto Hide
+        // 4. Card Scale
+        foreach (ComboBoxItem item in CardScaleCombo.Items)
+        {
+            if (string.Equals(item.Tag?.ToString(), _settings.CardScale.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                CardScaleCombo.SelectedItem = item;
+                break;
+            }
+        }
+        CardScaleCombo.SelectionChanged += CardScaleCombo_SelectionChanged;
+
+        // 5. Auto Hide
         AutoHideSwitch.IsOn = _settings.EnableAutoHide;
         _edgeSnapService.SetupAutoHide(_settings.EnableAutoHide);
+        AutoHideSwitch.Toggled += AutoHideSwitch_Toggled;
     }
 
     private async Task LoadDataAsync()
@@ -169,7 +184,7 @@ public sealed partial class MiniDockPage : Page
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
-            var window = App.MainWindowInstance;
+            var window = App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow;
             if (window != null)
             {
                 var hWnd = WindowNative.GetWindowHandle(window);
@@ -249,9 +264,10 @@ public sealed partial class MiniDockPage : Page
         };
 
         UpdatePinModeVisuals(_settings.PinMode);
-        if (App.MainWindowInstance != null)
+        var window = App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow;
+        if (window != null)
         {
-            DesktopPinService.ApplyPinMode(App.MainWindowInstance, _settings.PinMode);
+            DesktopPinService.ApplyPinMode(window, _settings.PinMode);
         }
         MiniDockSettingsService.Instance.SaveSettings(_settings);
     }

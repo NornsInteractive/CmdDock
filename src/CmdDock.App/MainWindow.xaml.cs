@@ -9,6 +9,7 @@ public sealed partial class MainWindow : Window
 {
     public MainWindow()
     {
+        App.MainWindowInstance = this;
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;

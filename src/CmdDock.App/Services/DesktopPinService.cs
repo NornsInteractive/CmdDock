@@ -34,8 +34,9 @@ public static class DesktopPinService
 
     private static IntPtr _originalParent = IntPtr.Zero;
 
-    public static void ApplyPinMode(Window window, DesktopPinMode mode)
+    public static void ApplyPinMode(Window? window, DesktopPinMode mode)
     {
+        if (window == null) return;
         try
         {
             var hWnd = WindowNative.GetWindowHandle(window);

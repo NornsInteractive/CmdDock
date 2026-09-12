@@ -85,15 +85,15 @@
                                     <!-- Opacity Slider -->
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="窗口不透明度" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        <Slider x:Name="OpacitySlider" Minimum="30" Maximum="100" Value="95" ValueChanged="OpacitySlider_ValueChanged" />
+                                        <Slider x:Name="OpacitySlider" />
                                     </StackPanel>
 
                                     <!-- Card Scale -->
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="卡片缩放" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        <ComboBox x:Name="CardScaleCombo" HorizontalAlignment="Stretch" SelectionChanged="CardScaleCombo_SelectionChanged">
+                                        <ComboBox x:Name="CardScaleCombo" HorizontalAlignment="Stretch">
                                             <ComboBoxItem Content="紧凑小" Tag="Small" />
-                                            <ComboBoxItem Content="标准中" Tag="Medium" IsSelected="True" />
+                                            <ComboBoxItem Content="标准中" Tag="Medium" />
                                             <ComboBoxItem Content="宽阔大" Tag="Large" />
                                         </ComboBox>
                                     </StackPanel>
@@ -101,8 +101,7 @@
                                     <!-- Auto-Hide Toggle -->
                                     <ToggleSwitch x:Name="AutoHideSwitch"
                                                   Header="贴边自动隐藏"
-                                                  FontSize="12"
-                                                  Toggled="AutoHideSwitch_Toggled" />
+                                                  FontSize="12" />
                                 </StackPanel>
                             </Flyout>
                         </Button.Flyout>
