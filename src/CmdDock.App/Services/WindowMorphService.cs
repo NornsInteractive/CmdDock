@@ -103,6 +103,9 @@ public class WindowMorphService
         // 7. Navigate to MiniDockPage
         _mainWindow.ContentFrame.Navigate(typeof(MiniDockPage));
 
+        appWindow.Show(true);
+        _mainWindow.Activate();
+
         MiniDockSettingsService.Instance.SaveSettings(settings);
         ViewModeChanged?.Invoke(_currentViewMode);
     }
@@ -154,6 +157,9 @@ public class WindowMorphService
 
         // 6. Navigate to MainPage
         _mainWindow.ContentFrame.Navigate(typeof(MainPage));
+
+        appWindow.Show(true);
+        _mainWindow.Activate();
 
         MiniDockSettingsService.Instance.SaveSettings(settings);
         ViewModeChanged?.Invoke(_currentViewMode);

@@ -66,21 +66,12 @@ public static class DesktopPinService
                     break;
 
                 case DesktopPinMode.PinToDesktop:
+                    RestoreParentIfNeeded(hWnd);
                     if (presenter != null)
                     {
                         presenter.IsAlwaysOnTop = false;
                     }
-
-                    // Try to attach to WorkerW or Progman behind desktop icons
-                    var desktopHwnd = GetDesktopWorkerW();
-                    if (desktopHwnd != IntPtr.Zero)
-                    {
-                        _originalParent = SetParent(hWnd, desktopHwnd);
-                    }
-                    else
-                    {
-                        SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-                    }
+                    SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
                     break;
             }
         }

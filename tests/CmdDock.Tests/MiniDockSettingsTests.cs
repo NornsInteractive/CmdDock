@@ -51,6 +51,9 @@ public class MiniDockSettingsTests
         Assert.Equal("mini", loaded.StartupView);
         Assert.Equal(120, loaded.WindowX);
         Assert.Equal(240, loaded.WindowY);
+
+        // Reset to default
+        service.SaveSettings(new MiniDockSettings());
     }
 
     [Fact]
