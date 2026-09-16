@@ -61,8 +61,8 @@ public sealed class CommandActionWindow : Window
         if (presenter != null)
         {
             presenter.IsAlwaysOnTop = true;
-            presenter.IsResizable = false;
-            presenter.IsMaximizable = false;
+            presenter.IsResizable = true;
+            presenter.IsMaximizable = true;
             presenter.IsMinimizable = false;
         }
 
@@ -86,7 +86,9 @@ public sealed class CommandActionWindow : Window
         var rootGrid = new Grid
         {
             Padding = new Thickness(24, 20, 24, 20),
-            RowSpacing = 14
+            RowSpacing = 14,
+            MinWidth = 360,
+            MinHeight = 220
         };
 
         rootGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
@@ -214,8 +216,14 @@ public sealed class CommandActionWindow : Window
             middleStack.Children.Add(confirmWarningBorder);
         }
 
-        Grid.SetRow(middleStack, 2);
-        rootGrid.Children.Add(middleStack);
+        var middleScroll = new ScrollViewer
+        {
+            Content = middleStack,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        Grid.SetRow(middleScroll, 2);
+        rootGrid.Children.Add(middleScroll);
 
         // 4. Action Buttons Footer
         var buttonPanel = new StackPanel

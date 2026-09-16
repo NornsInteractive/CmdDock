@@ -29,6 +29,40 @@ public class WindowMorphService
     public void Initialize(MainWindow mainWindow)
     {
         _mainWindow = mainWindow;
+        _mainWindow.AppWindow.Changed += OnAppWindowChanged;
+    }
+
+    private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
+    {
+        if (args.DidSizeChange)
+        {
+            var settings = MiniDockSettingsService.Instance.LoadSettings();
+            if (_currentViewMode == WindowViewMode.MiniDockView)
+            {
+                if (sender.Size.Width > 200 && sender.Size.Height > 150)
+                {
+                    settings.MiniWidth = sender.Size.Width;
+                    settings.MiniHeight = sender.Size.Height;
+                    MiniDockSettingsService.Instance.SaveSettings(settings);
+                }
+            }
+            else if (_currentViewMode == WindowViewMode.FullView)
+            {
+                if (sender.Size.Width > 500 && sender.Size.Height > 400)
+                {
+                    settings.FullWidth = sender.Size.Width;
+                    settings.FullHeight = sender.Size.Height;
+                    MiniDockSettingsService.Instance.SaveSettings(settings);
+                }
+            }
+        }
+        if (args.DidPositionChange && _currentViewMode == WindowViewMode.MiniDockView)
+        {
+            var settings = MiniDockSettingsService.Instance.LoadSettings();
+            settings.WindowX = sender.Position.X;
+            settings.WindowY = sender.Position.Y;
+            MiniDockSettingsService.Instance.SaveSettings(settings);
+        }
     }
 
     public void SwitchToMiniDock(MiniDockMode? requestedMode = null)
@@ -53,18 +87,19 @@ public class WindowMorphService
 
         _currentViewMode = WindowViewMode.MiniDockView;
 
-        // 2. Adjust Presenter
+        // 2. Adjust Presenter: keep window resizable with standard native borders!
         var presenter = appWindow.Presenter as OverlappedPresenter;
         if (presenter != null)
         {
-            presenter.SetBorderAndTitleBar(false, false);
-            presenter.IsResizable = false;
-            presenter.IsMaximizable = false;
-            presenter.IsMinimizable = false;
+            presenter.SetBorderAndTitleBar(true, true);
+            presenter.IsResizable = true;
+            presenter.IsMaximizable = true;
+            presenter.IsMinimizable = true;
         }
 
-        // 3. Hide full titlebar
-        _mainWindow.TitleBarControl.Visibility = Visibility.Collapsed;
+        // 3. Keep titlebar visible and active for native window dragging
+        _mainWindow.TitleBarControl.Visibility = Visibility.Visible;
+        _mainWindow.SetTitleBar(_mainWindow.TitleBarControl);
 
         // 4. Determine target size
         int targetWidth, targetHeight;

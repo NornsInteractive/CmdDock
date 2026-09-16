@@ -50,8 +50,8 @@
 
                 <!-- Drag Handle & Title -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <FontIcon Glyph="&#xE765;" FontSize="13" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                    <TextBlock Text="CmdDock" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
+                    <FontIcon Glyph="&#xE737;" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    <TextBlock Text="桌面小窗口" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
 
                 <!-- Action Toolbar -->
