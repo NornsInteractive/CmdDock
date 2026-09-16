@@ -1,9 +1,9 @@
+using System;
 using CmdDock.Core.Models;
 using CmdDock.Core.Services;
 using CmdDock_App.Views;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using Windows.Graphics;
 
 namespace CmdDock_App.Services;
@@ -20,88 +20,64 @@ public class WindowMorphService
     public static WindowMorphService Instance => _instance ??= new WindowMorphService();
 
     private MainWindow? _mainWindow;
+    private MiniDockWindow? _miniDockWindow;
     private WindowViewMode _currentViewMode = WindowViewMode.FullView;
 
     public WindowViewMode CurrentViewMode => _currentViewMode;
     public MainWindow? MainWindow => _mainWindow;
+    public MiniDockWindow? MiniDockWindow => _miniDockWindow;
     public event Action<WindowViewMode>? ViewModeChanged;
 
     public void Initialize(MainWindow mainWindow)
     {
         _mainWindow = mainWindow;
-        _mainWindow.AppWindow.Changed += OnAppWindowChanged;
+        _mainWindow.AppWindow.Changed += OnMainWindowChanged;
     }
 
-    private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
+    private void OnMainWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
     {
-        if (args.DidSizeChange)
+        if (args.DidSizeChange && _currentViewMode == WindowViewMode.FullView)
         {
-            var settings = MiniDockSettingsService.Instance.LoadSettings();
-            if (_currentViewMode == WindowViewMode.MiniDockView)
+            if (sender.Size.Width > 500 && sender.Size.Height > 400)
             {
-                if (sender.Size.Width > 200 && sender.Size.Height > 150)
-                {
-                    settings.MiniWidth = sender.Size.Width;
-                    settings.MiniHeight = sender.Size.Height;
-                    MiniDockSettingsService.Instance.SaveSettings(settings);
-                }
+                var settings = MiniDockSettingsService.Instance.LoadSettings();
+                settings.FullWidth = sender.Size.Width;
+                settings.FullHeight = sender.Size.Height;
+                MiniDockSettingsService.Instance.SaveSettings(settings);
             }
-            else if (_currentViewMode == WindowViewMode.FullView)
-            {
-                if (sender.Size.Width > 500 && sender.Size.Height > 400)
-                {
-                    settings.FullWidth = sender.Size.Width;
-                    settings.FullHeight = sender.Size.Height;
-                    MiniDockSettingsService.Instance.SaveSettings(settings);
-                }
-            }
-        }
-        if (args.DidPositionChange && _currentViewMode == WindowViewMode.MiniDockView)
-        {
-            var settings = MiniDockSettingsService.Instance.LoadSettings();
-            settings.WindowX = sender.Position.X;
-            settings.WindowY = sender.Position.Y;
-            MiniDockSettingsService.Instance.SaveSettings(settings);
         }
     }
 
     public void SwitchToMiniDock(MiniDockMode? requestedMode = null)
     {
-        if (_mainWindow == null) return;
-
         var settings = MiniDockSettingsService.Instance.LoadSettings();
         if (requestedMode.HasValue)
         {
             settings.DockMode = requestedMode.Value;
         }
 
-        var appWindow = _mainWindow.AppWindow;
-        if (appWindow == null) return;
-
-        // 1. Save Full View geometry
-        if (_currentViewMode == WindowViewMode.FullView)
+        // 1. Hide MainWindow if currently in FullView
+        if (_mainWindow != null)
         {
-            settings.FullWidth = appWindow.Size.Width;
-            settings.FullHeight = appWindow.Size.Height;
+            if (_currentViewMode == WindowViewMode.FullView)
+            {
+                settings.FullWidth = _mainWindow.AppWindow.Size.Width;
+                settings.FullHeight = _mainWindow.AppWindow.Size.Height;
+            }
+            _mainWindow.AppWindow.Hide();
         }
 
         _currentViewMode = WindowViewMode.MiniDockView;
 
-        // 2. Adjust Presenter: keep window resizable with standard native borders!
-        var presenter = appWindow.Presenter as OverlappedPresenter;
-        if (presenter != null)
+        // 2. Ensure MiniDockWindow is instantiated
+        if (_miniDockWindow == null)
         {
-            presenter.SetBorderAndTitleBar(true, true);
-            presenter.IsResizable = true;
-            presenter.IsMaximizable = true;
-            presenter.IsMinimizable = true;
+            _miniDockWindow = new MiniDockWindow();
         }
 
-        // 3. Keep titlebar visible and active for native window dragging
-        _mainWindow.TitleBarControl.Visibility = Visibility.Visible;
-        _mainWindow.SetTitleBar(_mainWindow.TitleBarControl);
+        var appWindow = _miniDockWindow.AppWindow;
 
-        // 4. Determine target size
+        // 3. Determine target size
         int targetWidth, targetHeight;
         if (settings.DockMode == MiniDockMode.DockBar)
         {
@@ -118,11 +94,11 @@ public class WindowMorphService
         }
         else
         {
-            targetWidth = settings.MiniWidth > 0 ? settings.MiniWidth : 360;
-            targetHeight = settings.MiniHeight > 0 ? settings.MiniHeight : 500;
+            targetWidth = settings.MiniWidth > 200 ? settings.MiniWidth : 360;
+            targetHeight = settings.MiniHeight > 200 ? settings.MiniHeight : 500;
         }
 
-        // 5. Reposition & Resize
+        // 4. Reposition & Resize MiniDockWindow
         if (settings.WindowX.HasValue && settings.WindowY.HasValue)
         {
             appWindow.MoveAndResize(new RectInt32(settings.WindowX.Value, settings.WindowY.Value, targetWidth, targetHeight));
@@ -132,14 +108,15 @@ public class WindowMorphService
             appWindow.Resize(new SizeInt32(targetWidth, targetHeight));
         }
 
-        // 6. Apply Pin Mode (AlwaysOnTop / PinToDesktop)
-        DesktopPinService.ApplyPinMode(_mainWindow, settings.PinMode);
+        // 5. Update UI mode inside DockPage
+        _miniDockWindow.DockPage?.SetDockMode(settings.DockMode);
 
-        // 7. Navigate to MiniDockPage
-        _mainWindow.ContentFrame.Navigate(typeof(MiniDockPage));
+        // 6. Apply Pin Mode (AlwaysOnTop / PinToDesktop / Normal)
+        DesktopPinService.ApplyPinMode(_miniDockWindow, settings.PinMode);
 
+        // 7. Show and activate MiniDockWindow
         appWindow.Show(true);
-        _mainWindow.Activate();
+        _miniDockWindow.Activate();
 
         MiniDockSettingsService.Instance.SaveSettings(settings);
         ViewModeChanged?.Invoke(_currentViewMode);
@@ -147,56 +124,62 @@ public class WindowMorphService
 
     public void SwitchToFullView()
     {
-        if (_mainWindow == null) return;
-
         var settings = MiniDockSettingsService.Instance.LoadSettings();
-        var appWindow = _mainWindow.AppWindow;
-        if (appWindow == null) return;
 
-        // 1. Save Mini Dock position
-        if (_currentViewMode == WindowViewMode.MiniDockView)
+        // 1. Save Mini Dock position & size, and hide MiniDockWindow
+        if (_miniDockWindow != null)
         {
-            settings.WindowX = appWindow.Position.X;
-            settings.WindowY = appWindow.Position.Y;
+            settings.WindowX = _miniDockWindow.AppWindow.Position.X;
+            settings.WindowY = _miniDockWindow.AppWindow.Position.Y;
             if (settings.DockMode == MiniDockMode.CardDeck)
             {
-                settings.MiniWidth = appWindow.Size.Width;
-                settings.MiniHeight = appWindow.Size.Height;
+                settings.MiniWidth = _miniDockWindow.AppWindow.Size.Width;
+                settings.MiniHeight = _miniDockWindow.AppWindow.Size.Height;
             }
+            _miniDockWindow.AppWindow.Hide();
         }
 
         _currentViewMode = WindowViewMode.FullView;
 
-        // 2. Restore normal window pin mode
-        DesktopPinService.ApplyPinMode(_mainWindow, DesktopPinMode.Normal);
-
-        // 3. Restore Presenter
-        var presenter = appWindow.Presenter as OverlappedPresenter;
-        if (presenter != null)
+        // 2. Restore MainWindow
+        if (_mainWindow != null)
         {
-            presenter.SetBorderAndTitleBar(true, true);
-            presenter.IsResizable = true;
-            presenter.IsMaximizable = true;
-            presenter.IsMinimizable = true;
-            presenter.IsAlwaysOnTop = false;
+            var fullWidth = settings.FullWidth > 500 ? settings.FullWidth : 1100;
+            var fullHeight = settings.FullHeight > 400 ? settings.FullHeight : 750;
+            _mainWindow.AppWindow.Resize(new SizeInt32(fullWidth, fullHeight));
+
+            DesktopPinService.ApplyPinMode(_mainWindow, DesktopPinMode.Normal);
+
+            var presenter = _mainWindow.AppWindow.Presenter as OverlappedPresenter;
+            if (presenter != null)
+            {
+                presenter.SetBorderAndTitleBar(true, true);
+                presenter.IsResizable = true;
+                presenter.IsMaximizable = true;
+                presenter.IsMinimizable = true;
+                presenter.IsAlwaysOnTop = false;
+            }
+
+            _mainWindow.TitleBarControl.Visibility = Visibility.Visible;
+            _mainWindow.SetTitleBar(_mainWindow.TitleBarControl);
+
+            _mainWindow.AppWindow.Show(true);
+            _mainWindow.Activate();
         }
-
-        // 4. Show custom AppTitleBar
-        _mainWindow.TitleBarControl.Visibility = Visibility.Visible;
-        _mainWindow.SetTitleBar(_mainWindow.TitleBarControl);
-
-        // 5. Restore full size
-        var fullWidth = settings.FullWidth > 500 ? settings.FullWidth : 1000;
-        var fullHeight = settings.FullHeight > 400 ? settings.FullHeight : 680;
-        appWindow.Resize(new SizeInt32(fullWidth, fullHeight));
-
-        // 6. Navigate to MainPage
-        _mainWindow.ContentFrame.Navigate(typeof(MainPage));
-
-        appWindow.Show(true);
-        _mainWindow.Activate();
 
         MiniDockSettingsService.Instance.SaveSettings(settings);
         ViewModeChanged?.Invoke(_currentViewMode);
+    }
+
+    public void BringCurrentWindowToForeground()
+    {
+        if (_currentViewMode == WindowViewMode.MiniDockView && _miniDockWindow != null)
+        {
+            _miniDockWindow.Activate();
+        }
+        else if (_mainWindow != null)
+        {
+            _mainWindow.Activate();
+        }
     }
 }

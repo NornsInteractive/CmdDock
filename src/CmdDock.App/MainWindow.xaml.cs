@@ -26,17 +26,22 @@ public sealed partial class MainWindow : Window
         WindowMorphService.Instance.Initialize(this);
 
         var dockSettings = MiniDockSettingsService.Instance.LoadSettings();
-        if (dockSettings.StartupView == "mini")
+        var fullWidth = dockSettings.FullWidth > 500 ? dockSettings.FullWidth : 1100;
+        var fullHeight = dockSettings.FullHeight > 400 ? dockSettings.FullHeight : 750;
+        AppWindow.Resize(new Windows.Graphics.SizeInt32(fullWidth, fullHeight));
+        RootFrame.Navigate(typeof(MainPage));
+
+        this.Closed += (s, e) =>
         {
-            WindowMorphService.Instance.SwitchToMiniDock();
-        }
-        else
-        {
-            var fullWidth = dockSettings.FullWidth > 500 ? dockSettings.FullWidth : 1100;
-            var fullHeight = dockSettings.FullHeight > 400 ? dockSettings.FullHeight : 750;
-            AppWindow.Resize(new Windows.Graphics.SizeInt32(fullWidth, fullHeight));
-            RootFrame.Navigate(typeof(MainPage));
-        }
+            if (WindowMorphService.Instance.MiniDockWindow != null)
+            {
+                try
+                {
+                    WindowMorphService.Instance.MiniDockWindow.Close();
+                }
+                catch { }
+            }
+        };
     }
 
     public UIElement TitleBarControl => AppTitleBar;

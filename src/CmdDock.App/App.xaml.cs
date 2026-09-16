@@ -57,7 +57,17 @@ public partial class App : Application
             _window = new MainWindow();
             MainWindowInstance = _window;
             CmdDock_App.Services.ThemeService.InitializeTheme();
-            _window.Activate();
+
+            var dockSettings = CmdDock.Core.Services.MiniDockSettingsService.Instance.LoadSettings();
+            if (dockSettings.StartupView == "mini")
+            {
+                CmdDock_App.Services.WindowMorphService.Instance.SwitchToMiniDock();
+            }
+            else
+            {
+                _window.Activate();
+            }
+
             System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Window activated successfully.\n");
         }
         catch (Exception ex)
@@ -79,18 +89,6 @@ public partial class App : Application
 
     public static void BringMainWindowToForeground()
     {
-        if (MainWindowInstance == null) return;
-
-        MainWindowInstance.DispatcherQueue?.TryEnqueue(() =>
-        {
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(MainWindowInstance);
-            if (hwnd != IntPtr.Zero)
-            {
-                ShowWindow(hwnd, SW_RESTORE);
-                SetForegroundWindow(hwnd);
-                SwitchToThisWindow(hwnd, true);
-            }
-            MainWindowInstance.Activate();
-        });
+        CmdDock_App.Services.WindowMorphService.Instance.BringCurrentWindowToForeground();
     }
 }

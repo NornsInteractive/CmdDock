@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
+using Windows.Graphics;
 using WinRT.Interop;
 
 namespace CmdDock_App.Views;
@@ -48,7 +49,7 @@ public sealed partial class MiniDockPage : Page
         _commandExecutor = new CommandExecutor(_commandService, _logService);
 
         _settings = MiniDockSettingsService.Instance.LoadSettings();
-        _edgeSnapService = new EdgeSnapService(App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow);
+        _edgeSnapService = new EdgeSnapService((Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow ?? App.MainWindowInstance);
 
         CardsItemsControl.ItemsSource = DisplayedCommands;
         DockBarItemsControl.ItemsSource = DisplayedCommands;
@@ -184,7 +185,7 @@ public sealed partial class MiniDockPage : Page
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
-            var window = App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow;
+            var window = (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow ?? App.MainWindowInstance;
             if (window != null)
             {
                 var hWnd = WindowNative.GetWindowHandle(window);
@@ -193,6 +194,13 @@ public sealed partial class MiniDockPage : Page
                     ReleaseCapture();
                     SendMessage(hWnd, WM_SYSCOMMAND, (IntPtr)(SC_MOVE + HTCAPTION), IntPtr.Zero);
                     _edgeSnapService.CheckAndSnap(applySnap: true);
+
+                    if (window.AppWindow != null)
+                    {
+                        _settings.WindowX = window.AppWindow.Position.X;
+                        _settings.WindowY = window.AppWindow.Position.Y;
+                        MiniDockSettingsService.Instance.SaveSettings(_settings);
+                    }
                 }
             }
         }
@@ -208,6 +216,76 @@ public sealed partial class MiniDockPage : Page
         WindowMorphService.Instance.SwitchToFullView();
     }
 
+    private void CloseBtn_Click(object sender, RoutedEventArgs e)
+    {
+        Application.Current.Exit();
+    }
+
+    // =========================================================================
+    // CARD DECK RESIZING HANDLERS
+    // =========================================================================
+    private bool _isResizingCard;
+    private Windows.Foundation.Point _resizeStartPoint;
+    private SizeInt32 _resizeStartSize;
+
+    private void ResizeGrip_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            var window = (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow;
+            if (window?.AppWindow != null)
+            {
+                _isResizingCard = true;
+                _resizeStartPoint = e.GetCurrentPoint(null).Position;
+                _resizeStartSize = window.AppWindow.Size;
+                if (sender is UIElement uie)
+                {
+                    uie.CapturePointer(e.Pointer);
+                }
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void ResizeGrip_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isResizingCard)
+        {
+            var window = (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow;
+            if (window?.AppWindow != null)
+            {
+                var currentPoint = e.GetCurrentPoint(null).Position;
+                var deltaX = currentPoint.X - _resizeStartPoint.X;
+                var deltaY = currentPoint.Y - _resizeStartPoint.Y;
+
+                var newW = Math.Max(260, (int)(_resizeStartSize.Width + deltaX));
+                var newH = Math.Max(220, (int)(_resizeStartSize.Height + deltaY));
+
+                window.AppWindow.Resize(new SizeInt32(newW, newH));
+            }
+        }
+    }
+
+    private void ResizeGrip_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isResizingCard)
+        {
+            _isResizingCard = false;
+            if (sender is UIElement uie)
+            {
+                uie.ReleasePointerCapture(e.Pointer);
+            }
+            var window = (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow;
+            if (window?.AppWindow != null)
+            {
+                _settings.MiniWidth = window.AppWindow.Size.Width;
+                _settings.MiniHeight = window.AppWindow.Size.Height;
+                MiniDockSettingsService.Instance.SaveSettings(_settings);
+            }
+            e.Handled = true;
+        }
+    }
+
     // =========================================================================
     // MODE & PIN SWITCHING
     // =========================================================================
@@ -218,6 +296,12 @@ public sealed partial class MiniDockPage : Page
             : MiniDockMode.CardDeck;
 
         WindowMorphService.Instance.SwitchToMiniDock(targetMode);
+    }
+
+    public void SetDockMode(MiniDockMode mode)
+    {
+        _settings.DockMode = mode;
+        UpdateDockModeVisuals(mode);
     }
 
     private void UpdateDockModeVisuals(MiniDockMode mode)
@@ -264,7 +348,7 @@ public sealed partial class MiniDockPage : Page
         };
 
         UpdatePinModeVisuals(_settings.PinMode);
-        var window = App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow;
+        var window = (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow ?? App.MainWindowInstance;
         if (window != null)
         {
             DesktopPinService.ApplyPinMode(window, _settings.PinMode);

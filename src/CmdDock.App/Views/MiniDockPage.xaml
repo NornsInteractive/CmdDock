@@ -114,6 +114,14 @@
                             Click="ExpandBtn_Click">
                         <FontIcon Glyph="&#xE740;" FontSize="12" />
                     </Button>
+
+                    <!-- Close / Exit App -->
+                    <Button x:Name="CloseBtn"
+                            Width="28" Height="28" Padding="0"
+                            ToolTipService.ToolTip="退出应用"
+                            Click="CloseBtn_Click">
+                        <FontIcon Glyph="&#xE8BB;" FontSize="10" />
+                    </Button>
                 </StackPanel>
             </Grid>
 
@@ -210,12 +218,25 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
+
+            <!-- Bottom-Right Resize Grip for Card Deck Mode -->
+            <Grid Grid.Row="2"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Bottom"
+                  Width="20" Height="20"
+                  Margin="0,0,-6,-6"
+                  Background="Transparent"
+                  PointerPressed="ResizeGrip_PointerPressed"
+                  PointerMoved="ResizeGrip_PointerMoved"
+                  PointerReleased="ResizeGrip_PointerReleased">
+                <FontIcon Glyph="&#xE7C3;" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,4,4" />
+            </Grid>
         </Grid>
 
         <!-- ========================================================================= -->
         <!-- VIEW 2: COMPACT DOCK BAR MODE (紧凑 Dock 条模式)                           -->
         <!-- ========================================================================= -->
-        <Grid x:Name="DockBarContainer" Visibility="Collapsed" Padding="6">
+        <Grid x:Name="DockBarContainer" Visibility="Collapsed" Padding="6" Background="Transparent" PointerPressed="Header_PointerPressed">
             <StackPanel x:Name="DockBarStack" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                 <!-- Drag Handle & Controls on Dock Bar -->
                 <Button x:Name="DockBarHandleBtn"

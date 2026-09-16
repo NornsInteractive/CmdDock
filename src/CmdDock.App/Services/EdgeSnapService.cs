@@ -1,4 +1,5 @@
 using CmdDock.Core.Models;
+using CmdDock_App.Views;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Windows.Graphics;
@@ -20,7 +21,7 @@ public class EdgeSnapService
     private const int HiddenMargin = 6;  // Pixels visible when auto-hidden
 
     private Window? _window;
-    public Window? TargetWindow => _window ?? App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow;
+    public Window? TargetWindow => _window ?? (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow ?? App.MainWindowInstance;
     private DispatcherTimer? _autoHideTimer;
     private bool _isCurrentlyHidden;
     private SnappedEdge _lastSnappedEdge = SnappedEdge.None;
