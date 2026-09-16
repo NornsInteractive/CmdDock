@@ -347,9 +347,32 @@ public sealed partial class MiniDockPage : Page
     {
         if (sender is FrameworkElement fe && fe.DataContext is CommandItem cmd)
         {
-            if (cmd.HasParameters)
+            var hasParams = cmd.HasParameters;
+            var needsConfirm = cmd.RequireConfirmation;
+            var ownerWindow = App.MainWindowInstance ?? WindowMorphService.Instance.MainWindow;
+
+            if (hasParams && needsConfirm)
             {
-                await PromptAndExecuteWithParametersAsync(cmd);
+                var actionRes = await CommandActionWindow.ShowDialogAsync(cmd, CommandActionMode.ParameterAndConfirm, ownerWindow);
+                if (!actionRes.IsConfirmed) return;
+
+                var runnable = CloneWithParam(cmd, actionRes.ParameterValue);
+                await ExecuteCommandAsync(cmd, runnable);
+            }
+            else if (hasParams)
+            {
+                var actionRes = await CommandActionWindow.ShowDialogAsync(cmd, CommandActionMode.ParameterInput, ownerWindow);
+                if (!actionRes.IsConfirmed) return;
+
+                var runnable = CloneWithParam(cmd, actionRes.ParameterValue);
+                await ExecuteCommandAsync(cmd, runnable);
+            }
+            else if (needsConfirm)
+            {
+                var actionRes = await CommandActionWindow.ShowDialogAsync(cmd, CommandActionMode.Confirmation, ownerWindow);
+                if (!actionRes.IsConfirmed) return;
+
+                await ExecuteCommandAsync(cmd);
             }
             else
             {
@@ -358,31 +381,19 @@ public sealed partial class MiniDockPage : Page
         }
     }
 
-    private async Task PromptAndExecuteWithParametersAsync(CommandItem cmd)
+    private static CommandItem CloneWithParam(CommandItem cmd, string param)
     {
-        ParamDialogPrompt.Text = $"{I18nService.Instance["MiniDock.ParamPrompt"]}\n\n{cmd.CommandText}";
-        ParamInputTextBox.Text = string.Empty;
-        ParamInputDialog.XamlRoot = this.XamlRoot;
-
-        var dialogResult = await ParamInputDialog.ShowAsync();
-        if (dialogResult == ContentDialogResult.Primary)
+        return new CommandItem
         {
-            var param = ParamInputTextBox.Text.Trim();
-            // Clone item with replaced parameters
-            var runnable = new CommandItem
-            {
-                Id = cmd.Id,
-                Name = cmd.Name,
-                Description = cmd.Description,
-                ShellType = cmd.ShellType,
-                CommandText = ReplacePlaceholder(cmd.CommandText, param),
-                Arguments = ReplacePlaceholder(cmd.Arguments, param),
-                WorkingDirectory = cmd.WorkingDirectory,
-                ExecutionMode = cmd.ExecutionMode
-            };
-
-            await ExecuteCommandAsync(cmd, runnable);
-        }
+            Id = cmd.Id,
+            Name = cmd.Name,
+            Description = cmd.Description,
+            ShellType = cmd.ShellType,
+            CommandText = ReplacePlaceholder(cmd.CommandText, param),
+            Arguments = ReplacePlaceholder(cmd.Arguments, param),
+            WorkingDirectory = cmd.WorkingDirectory,
+            ExecutionMode = cmd.ExecutionMode
+        };
     }
 
     private static string ReplacePlaceholder(string? text, string replacement)

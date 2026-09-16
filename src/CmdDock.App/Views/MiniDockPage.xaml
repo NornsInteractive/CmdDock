@@ -282,17 +282,5 @@
                 </ItemsControl>
             </StackPanel>
         </Grid>
-
-        <!-- Parameter Input Dialog / Flyout Container -->
-        <ContentDialog x:Name="ParamInputDialog"
-                       Title="执行参数输入"
-                       PrimaryButtonText="执行"
-                       CloseButtonText="取消"
-                       DefaultButton="Primary">
-            <StackPanel Spacing="10">
-                <TextBlock x:Name="ParamDialogPrompt" Text="该命令需要动态参数，请输入后执行：" FontSize="13" />
-                <TextBox x:Name="ParamInputTextBox" PlaceholderText="输入参数..." />
-            </StackPanel>
-        </ContentDialog>
     </Grid>
 </Page>
