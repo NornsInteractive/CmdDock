@@ -15,14 +15,10 @@ namespace CmdDock_App.Views;
 public sealed partial class MiniDockPage : Page
 {
     [DllImport("user32.dll")]
-    private static extern bool ReleaseCapture();
+    private static extern bool GetCursorPos(out POINT lpPoint);
 
-    [DllImport("user32.dll")]
-    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
-    private const uint WM_SYSCOMMAND = 0x0112;
-    private const uint SC_MOVE = 0xF010;
-    private const uint HTCAPTION = 0x0002;
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
     private readonly ICommandService _commandService;
     private readonly ICategoryService _categoryService;
@@ -181,28 +177,74 @@ public sealed partial class MiniDockPage : Page
     // =========================================================================
     // WINDOW DRAG & EXPAND ACTIONS
     // =========================================================================
+    private bool _isDraggingWindow = false;
+    private POINT _dragStartCursor;
+    private PointInt32 _dragStartWindowPos;
+
     private void Header_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        var ptrPt = e.GetCurrentPoint(sender as UIElement);
+        if (ptrPt.Properties.IsLeftButtonPressed)
         {
             var window = (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow ?? App.MainWindowInstance;
-            if (window != null)
+            if (window?.AppWindow != null)
             {
+                _isDraggingWindow = true;
+                _edgeSnapService.IsDragging = true;
+                GetCursorPos(out _dragStartCursor);
+                _dragStartWindowPos = window.AppWindow.Position;
+
+                if (sender is UIElement uie)
+                {
+                    uie.CapturePointer(e.Pointer);
+                }
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void Header_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingWindow)
+        {
+            var window = (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow ?? App.MainWindowInstance;
+            if (window?.AppWindow != null)
+            {
+                GetCursorPos(out var cur);
+                int newX = _dragStartWindowPos.X + (cur.X - _dragStartCursor.X);
+                int newY = _dragStartWindowPos.Y + (cur.Y - _dragStartCursor.Y);
+
                 var hWnd = WindowNative.GetWindowHandle(window);
                 if (hWnd != IntPtr.Zero)
                 {
-                    ReleaseCapture();
-                    SendMessage(hWnd, WM_SYSCOMMAND, (IntPtr)(SC_MOVE + HTCAPTION), IntPtr.Zero);
-                    _edgeSnapService.CheckAndSnap(applySnap: true);
-
-                    if (window.AppWindow != null)
-                    {
-                        _settings.WindowX = window.AppWindow.Position.X;
-                        _settings.WindowY = window.AppWindow.Position.Y;
-                        MiniDockSettingsService.Instance.SaveSettings(_settings);
-                    }
+                    SetWindowPos(hWnd, IntPtr.Zero, newX, newY, 0, 0, 0x0001 | 0x0004 | 0x0010); // SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE
                 }
+                e.Handled = true;
             }
+        }
+    }
+
+    private void Header_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingWindow)
+        {
+            _isDraggingWindow = false;
+            _edgeSnapService.IsDragging = false;
+            if (sender is UIElement uie)
+            {
+                uie.ReleasePointerCapture(e.Pointer);
+            }
+
+            var window = (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow ?? App.MainWindowInstance;
+            if (window?.AppWindow != null)
+            {
+                _edgeSnapService.CheckAndSnap(applySnap: true);
+
+                _settings.WindowX = window.AppWindow.Position.X;
+                _settings.WindowY = window.AppWindow.Position.Y;
+                MiniDockSettingsService.Instance.SaveSettings(_settings);
+            }
+            e.Handled = true;
         }
     }
 

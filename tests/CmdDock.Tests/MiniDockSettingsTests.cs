@@ -16,7 +16,7 @@ public class MiniDockSettingsTests
         Assert.Equal(DockOrientation.Auto, settings.Orientation);
         Assert.Equal(0.95, settings.Opacity);
         Assert.Equal(CardScale.Medium, settings.CardScale);
-        Assert.False(settings.EnableAutoHide);
+        Assert.True(settings.EnableAutoHide);
         Assert.Equal("full", settings.StartupView);
         Assert.Equal(360, settings.MiniWidth);
         Assert.Equal(500, settings.MiniHeight);

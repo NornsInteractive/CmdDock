@@ -47,7 +47,7 @@ public class MiniDockSettings
     public CardScale CardScale { get; set; } = CardScale.Medium;
 
     [JsonPropertyName("enableAutoHide")]
-    public bool EnableAutoHide { get; set; } = false;
+    public bool EnableAutoHide { get; set; } = true;
 
     [JsonPropertyName("startupView")]
     public string StartupView { get; set; } = "full"; // "full" or "mini"

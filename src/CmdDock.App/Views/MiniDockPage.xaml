@@ -41,6 +41,8 @@
                   x:Name="CardHeader"
                   Background="Transparent"
                   PointerPressed="Header_PointerPressed"
+                  PointerMoved="Header_PointerMoved"
+                  PointerReleased="Header_PointerReleased"
                   DoubleTapped="Header_DoubleTapped"
                   Padding="4,0,4,8">
                 <Grid.ColumnDefinitions>
@@ -236,12 +238,17 @@
         <!-- ========================================================================= -->
         <!-- VIEW 2: COMPACT DOCK BAR MODE (紧凑 Dock 条模式)                           -->
         <!-- ========================================================================= -->
-        <Grid x:Name="DockBarContainer" Visibility="Collapsed" Padding="6" Background="Transparent" PointerPressed="Header_PointerPressed">
+        <Grid x:Name="DockBarContainer" Visibility="Collapsed" Padding="6" Background="Transparent"
+              PointerPressed="Header_PointerPressed"
+              PointerMoved="Header_PointerMoved"
+              PointerReleased="Header_PointerReleased">
             <StackPanel x:Name="DockBarStack" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                 <!-- Drag Handle & Controls on Dock Bar -->
                 <Button x:Name="DockBarHandleBtn"
                         Width="28" Height="28" Padding="0"
                         PointerPressed="Header_PointerPressed"
+                        PointerMoved="Header_PointerMoved"
+                        PointerReleased="Header_PointerReleased"
                         DoubleTapped="Header_DoubleTapped"
                         ToolTipService.ToolTip="按住拖动 / 双击展开大窗口">
                     <FontIcon Glyph="&#xE765;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />

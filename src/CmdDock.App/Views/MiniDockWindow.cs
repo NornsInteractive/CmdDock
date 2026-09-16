@@ -36,21 +36,41 @@ public sealed class MiniDockWindow : Window
         }
         catch { }
 
-        // Configure Presenter: completely frameless, no native title bar, no maximize/minimize
-        // Disabling maximize prevents Windows 11 Snap Layouts from appearing when moving near top edge
+        // Configure Presenter:
+        // SetBorderAndTitleBar(true, false): hasBorder = true gives native sizing frame (resizable borders on all 4 sides & 4 corners); hasTitleBar = false completely removes the native titlebar!
+        // IsMaximizable = false: prevents Windows 11 Snap Layouts from appearing when moving near top edge
         var presenter = appWindow.Presenter as OverlappedPresenter;
         if (presenter != null)
         {
-            presenter.SetBorderAndTitleBar(false, false);
-            presenter.IsResizable = false;
+            presenter.SetBorderAndTitleBar(true, false);
+            presenter.IsResizable = true;
             presenter.IsMaximizable = false;
             presenter.IsMinimizable = false;
         }
+
+        appWindow.Changed += OnAppWindowChanged;
 
         _dockPage = new MiniDockPage();
         this.Content = _dockPage;
 
         this.Closed += MiniDockWindow_Closed;
+    }
+
+    private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
+    {
+        if (args.DidSizeChange)
+        {
+            var settings = MiniDockSettingsService.Instance.LoadSettings();
+            if (settings.DockMode == MiniDockMode.CardDeck)
+            {
+                if (sender.Size.Width >= 200 && sender.Size.Height >= 150)
+                {
+                    settings.MiniWidth = sender.Size.Width;
+                    settings.MiniHeight = sender.Size.Height;
+                    MiniDockSettingsService.Instance.SaveSettings(settings);
+                }
+            }
+        }
     }
 
     private void MiniDockWindow_Closed(object sender, WindowEventArgs args)
