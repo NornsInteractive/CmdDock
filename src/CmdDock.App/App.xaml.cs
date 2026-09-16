@@ -68,6 +68,12 @@ public partial class App : Application
                 _window.Activate();
             }
 
+            CmdDock_App.Services.TrayIconService.Instance.Initialize();
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                CmdDock_App.Services.TrayIconService.Instance.Dispose();
+            };
+
             System.IO.File.AppendAllText(logFile, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Window activated successfully.\n");
         }
         catch (Exception ex)

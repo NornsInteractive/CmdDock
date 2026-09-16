@@ -114,7 +114,8 @@ public class WindowMorphService
         // 6. Apply Pin Mode (AlwaysOnTop / PinToDesktop / Normal)
         DesktopPinService.ApplyPinMode(_miniDockWindow, settings.PinMode);
 
-        // 7. Show and activate MiniDockWindow
+        // 7. Hide from taskbar and show & activate MiniDockWindow
+        appWindow.IsShownInSwitchers = false;
         appWindow.Show(true);
         _miniDockWindow.Activate();
 
@@ -163,6 +164,7 @@ public class WindowMorphService
             _mainWindow.TitleBarControl.Visibility = Visibility.Visible;
             _mainWindow.SetTitleBar(_mainWindow.TitleBarControl);
 
+            _mainWindow.AppWindow.IsShownInSwitchers = true;
             _mainWindow.AppWindow.Show(true);
             _mainWindow.Activate();
         }

@@ -48,6 +48,9 @@ public sealed class MiniDockWindow : Window
             presenter.IsMinimizable = false;
         }
 
+        // Hide from taskbar and Alt+Tab when in mini dock mode (only shown in system tray)
+        appWindow.IsShownInSwitchers = false;
+
         appWindow.Changed += OnAppWindowChanged;
 
         _dockPage = new MiniDockPage();

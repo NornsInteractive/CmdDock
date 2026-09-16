@@ -39,19 +39,27 @@ public class EdgeSnapService
     private const uint SWP_NOACTIVATE = 0x0010;
     private const uint SWP_SHOWWINDOW = 0x0040;
 
-    private const int SnapDistance = 35; // Snap threshold in pixels (25-35px feels very natural)
+    private const int SnapDistance = 45; // Generous snap threshold so pushing towards any edge catches easily
     private const int HiddenMargin = 4;  // 4 pixels visible when auto-hidden (like QQ)
 
     private Window? _window;
     public Window? TargetWindow => _window ?? (Window?)MiniDockWindow.Instance ?? WindowMorphService.Instance.MiniDockWindow ?? App.MainWindowInstance;
 
     private DispatcherTimer? _monitorTimer;
+    private DispatcherTimer? _slideAnimTimer;
     private bool _isCurrentlyHidden;
     private SnappedEdge _lastSnappedEdge = SnappedEdge.None;
     private PointInt32 _restoredPosition;
     private int _mouseLeaveCount = 0;
     private bool _autoHideEnabled = true;
     public bool IsDragging { get; set; } = false;
+
+    // Animation state
+    private PointInt32 _animStart;
+    private PointInt32 _animTarget;
+    private int _animFrame;
+    private const int AnimTotalFrames = 10; // 10 frames * 16ms = ~160ms smooth slide
+    private Action? _onAnimComplete;
 
     public event Action<SnappedEdge>? SnappedEdgeChanged;
     public event Action<bool>? AutoHideStateChanged;
@@ -71,7 +79,7 @@ public class EdgeSnapService
         {
             _monitorTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(80) // 80ms poll provides ~12 updates/sec with zero CPU
+                Interval = TimeSpan.FromMilliseconds(75) // ~13 polls/sec, imperceptible CPU
             };
             _monitorTimer.Tick += OnMonitorTick;
             _monitorTimer.Start();
@@ -83,7 +91,7 @@ public class EdgeSnapService
         _autoHideEnabled = enable;
         if (!enable && _isCurrentlyHidden)
         {
-            RestoreFromAutoHide();
+            RestoreFromAutoHide(animate: true);
         }
     }
 
@@ -91,14 +99,14 @@ public class EdgeSnapService
     {
         if (_isCurrentlyHidden)
         {
-            RestoreFromAutoHide();
+            RestoreFromAutoHide(animate: true);
         }
         _mouseLeaveCount = 0;
     }
 
     public void OnPointerExited(bool autoHideEnabled)
     {
-        // Handled by monitor timer
+        // Handled by continuous monitor timer
     }
 
     public SnappedEdge CheckAndSnap(bool applySnap = true)
@@ -112,31 +120,50 @@ public class EdgeSnapService
         var displayArea = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
         if (displayArea == null) return SnappedEdge.None;
 
-        var workArea = displayArea.WorkArea;
+        var outer = displayArea.OuterBounds;
+        var work = displayArea.WorkArea;
         var pos = appWindow.Position;
         var size = appWindow.Size;
 
-        var newX = pos.X;
-        var newY = pos.Y;
+        // Detect taskbar location: taskbar is at the edge where workArea does NOT reach outerBounds
+        bool taskbarAtBottom = (work.Y + work.Height) < (outer.Y + outer.Height);
+        bool taskbarAtTop = work.Y > outer.Y;
+        bool taskbarAtLeft = work.X > outer.X;
+        bool taskbarAtRight = (work.X + work.Width) < (outer.X + outer.Width);
+
+        // Calculate distances to all 3 available non-taskbar edges
+        // If user drags to/past an edge, distance is 0
+        int distTop = taskbarAtTop ? int.MaxValue : (pos.Y <= work.Y + SnapDistance ? Math.Max(0, pos.Y - work.Y) : int.MaxValue);
+        int distLeft = taskbarAtLeft ? int.MaxValue : (pos.X <= work.X + SnapDistance ? Math.Max(0, pos.X - work.X) : int.MaxValue);
+        int distRight = taskbarAtRight ? int.MaxValue : ((pos.X + size.Width >= work.X + work.Width - SnapDistance) ? Math.Max(0, (work.X + work.Width) - (pos.X + size.Width)) : int.MaxValue);
+
+        int newX = pos.X;
+        int newY = pos.Y;
         var edge = SnappedEdge.None;
 
-        // Check Top first (top docking is most popular like QQ)
-        if (Math.Abs(pos.Y - workArea.Y) <= SnapDistance)
+        int minDist = Math.Min(distTop, Math.Min(distLeft, distRight));
+
+        if (minDist <= SnapDistance)
         {
-            newY = workArea.Y;
-            edge = SnappedEdge.Top;
-        }
-        // Check Left
-        else if (Math.Abs(pos.X - workArea.X) <= SnapDistance)
-        {
-            newX = workArea.X;
-            edge = SnappedEdge.Left;
-        }
-        // Check Right
-        else if (Math.Abs((pos.X + size.Width) - (workArea.X + workArea.Width)) <= SnapDistance)
-        {
-            newX = workArea.X + workArea.Width - size.Width;
-            edge = SnappedEdge.Right;
+            if (minDist == distLeft)
+            {
+                edge = SnappedEdge.Left;
+                newX = work.X;
+                // Keep Y within work area
+                newY = Math.Clamp(pos.Y, work.Y, Math.Max(work.Y, work.Y + work.Height - size.Height));
+            }
+            else if (minDist == distRight)
+            {
+                edge = SnappedEdge.Right;
+                newX = work.X + work.Width - size.Width;
+                newY = Math.Clamp(pos.Y, work.Y, Math.Max(work.Y, work.Y + work.Height - size.Height));
+            }
+            else if (minDist == distTop)
+            {
+                edge = SnappedEdge.Top;
+                newY = work.Y;
+                newX = Math.Clamp(pos.X, work.X, Math.Max(work.X, work.X + work.Width - size.Width));
+            }
         }
 
         if (applySnap)
@@ -171,10 +198,9 @@ public class EdgeSnapService
 
         if (_lastSnappedEdge == SnappedEdge.None)
         {
-            // Window is free-floating in desktop
             if (_isCurrentlyHidden)
             {
-                RestoreFromAutoHide();
+                RestoreFromAutoHide(animate: true);
             }
             return;
         }
@@ -183,44 +209,44 @@ public class EdgeSnapService
 
         var displayArea = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
         if (displayArea == null) return;
-        var workArea = displayArea.WorkArea;
+        var work = displayArea.WorkArea;
         var pos = appWindow.Position;
         var size = appWindow.Size;
 
         if (_isCurrentlyHidden)
         {
-            // Check if mouse is touching the edge or the visible 4px slice of window
+            // Check if mouse touches the edge where the window is docked
             bool isMouseOverEdge = false;
             switch (_lastSnappedEdge)
             {
                 case SnappedEdge.Top:
-                    isMouseOverEdge = cursor.Y <= workArea.Y + 8 &&
-                                      cursor.X >= _restoredPosition.X - 10 &&
-                                      cursor.X <= _restoredPosition.X + size.Width + 10;
+                    isMouseOverEdge = cursor.Y <= work.Y + 8 &&
+                                      cursor.X >= _restoredPosition.X - 15 &&
+                                      cursor.X <= _restoredPosition.X + size.Width + 15;
                     break;
                 case SnappedEdge.Left:
-                    isMouseOverEdge = cursor.X <= workArea.X + 8 &&
-                                      cursor.Y >= _restoredPosition.Y - 10 &&
-                                      cursor.Y <= _restoredPosition.Y + size.Height + 10;
+                    isMouseOverEdge = cursor.X <= work.X + 8 &&
+                                      cursor.Y >= _restoredPosition.Y - 15 &&
+                                      cursor.Y <= _restoredPosition.Y + size.Height + 15;
                     break;
                 case SnappedEdge.Right:
-                    isMouseOverEdge = cursor.X >= workArea.X + workArea.Width - 8 &&
-                                      cursor.Y >= _restoredPosition.Y - 10 &&
-                                      cursor.Y <= _restoredPosition.Y + size.Height + 10;
+                    isMouseOverEdge = cursor.X >= work.X + work.Width - 8 &&
+                                      cursor.Y >= _restoredPosition.Y - 15 &&
+                                      cursor.Y <= _restoredPosition.Y + size.Height + 15;
                     break;
             }
 
             if (isMouseOverEdge)
             {
-                RestoreFromAutoHide();
+                RestoreFromAutoHide(animate: true);
                 _mouseLeaveCount = 0;
             }
         }
         else
         {
-            // Check if mouse is inside the restored window rect (with 8px tolerance)
-            bool isInsideWindow = cursor.X >= pos.X - 8 && cursor.X <= pos.X + size.Width + 8 &&
-                                  cursor.Y >= pos.Y - 8 && cursor.Y <= pos.Y + size.Height + 8;
+            // Check if mouse is inside the restored window rect (with 10px buffer)
+            bool isInsideWindow = cursor.X >= pos.X - 10 && cursor.X <= pos.X + size.Width + 10 &&
+                                  cursor.Y >= pos.Y - 10 && cursor.Y <= pos.Y + size.Height + 10;
 
             if (isInsideWindow)
             {
@@ -229,16 +255,16 @@ public class EdgeSnapService
             else
             {
                 _mouseLeaveCount++;
-                // After mouse leaves for ~320ms (4 ticks of 80ms), hide to edge
+                // After mouse leaves for ~300ms (4 ticks of 75ms), slide to hide
                 if (_mouseLeaveCount >= 4)
                 {
-                    AnimateToHidden();
+                    AnimateToHidden(animate: true);
                 }
             }
         }
     }
 
-    public void AnimateToHidden()
+    public void AnimateToHidden(bool animate = true)
     {
         var window = TargetWindow;
         if (window == null) return;
@@ -248,7 +274,7 @@ public class EdgeSnapService
         var displayArea = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
         if (displayArea == null) return;
 
-        var workArea = displayArea.WorkArea;
+        var work = displayArea.WorkArea;
         _restoredPosition = appWindow.Position;
         var size = appWindow.Size;
 
@@ -258,39 +284,119 @@ public class EdgeSnapService
         switch (_lastSnappedEdge)
         {
             case SnappedEdge.Left:
-                targetX = workArea.X - size.Width + HiddenMargin;
+                targetX = work.X - size.Width + HiddenMargin;
                 break;
             case SnappedEdge.Right:
-                targetX = workArea.X + workArea.Width - HiddenMargin;
+                targetX = work.X + work.Width - HiddenMargin;
                 break;
             case SnappedEdge.Top:
-                targetY = workArea.Y - size.Height + HiddenMargin;
+                targetY = work.Y - size.Height + HiddenMargin;
                 break;
         }
 
-        appWindow.Move(new PointInt32(targetX, targetY));
+        var targetPos = new PointInt32(targetX, targetY);
 
-        // When hidden, ensure window is topmost so edge slice is not buried by other windows
-        var hWnd = WindowNative.GetWindowHandle(window);
-        if (hWnd != IntPtr.Zero)
+        if (animate)
         {
-            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            StartSlideAnimation(targetPos, () =>
+            {
+                _isCurrentlyHidden = true;
+                AutoHideStateChanged?.Invoke(true);
+                EnsureTopmost(window);
+            });
         }
-
-        _isCurrentlyHidden = true;
-        AutoHideStateChanged?.Invoke(true);
+        else
+        {
+            appWindow.Move(targetPos);
+            _isCurrentlyHidden = true;
+            AutoHideStateChanged?.Invoke(true);
+            EnsureTopmost(window);
+        }
     }
 
-    public void RestoreFromAutoHide()
+    public void RestoreFromAutoHide(bool animate = true)
     {
         var window = TargetWindow;
         if (window == null) return;
         var appWindow = window.AppWindow;
         if (appWindow == null || !_isCurrentlyHidden) return;
 
-        appWindow.Move(_restoredPosition);
-        _isCurrentlyHidden = false;
-        AutoHideStateChanged?.Invoke(false);
+        if (animate)
+        {
+            StartSlideAnimation(_restoredPosition, () =>
+            {
+                _isCurrentlyHidden = false;
+                AutoHideStateChanged?.Invoke(false);
+            });
+        }
+        else
+        {
+            appWindow.Move(_restoredPosition);
+            _isCurrentlyHidden = false;
+            AutoHideStateChanged?.Invoke(false);
+        }
+    }
+
+    private void StartSlideAnimation(PointInt32 target, Action? onComplete = null)
+    {
+        var window = TargetWindow;
+        if (window?.AppWindow == null) return;
+
+        _slideAnimTimer?.Stop();
+        _animStart = window.AppWindow.Position;
+        _animTarget = target;
+        _animFrame = 0;
+        _onAnimComplete = onComplete;
+
+        if (_slideAnimTimer == null)
+        {
+            _slideAnimTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(16) // 60 fps
+            };
+            _slideAnimTimer.Tick += OnSlideAnimTick;
+        }
+        _slideAnimTimer.Start();
+    }
+
+    private void OnSlideAnimTick(object? sender, object e)
+    {
+        _animFrame++;
+        float t = Math.Clamp((float)_animFrame / AnimTotalFrames, 0f, 1f);
+        // EaseOutCubic: 1 - (1-t)^3
+        float eased = 1f - (float)Math.Pow(1f - t, 3);
+
+        int curX = (int)(_animStart.X + (_animTarget.X - _animStart.X) * eased);
+        int curY = (int)(_animStart.Y + (_animTarget.Y - _animStart.Y) * eased);
+
+        var window = TargetWindow;
+        if (window != null)
+        {
+            var hWnd = WindowNative.GetWindowHandle(window);
+            if (hWnd != IntPtr.Zero)
+            {
+                SetWindowPos(hWnd, IntPtr.Zero, curX, curY, 0, 0, 0x0001 | 0x0004 | 0x0010); // SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE
+            }
+        }
+
+        if (_animFrame >= AnimTotalFrames)
+        {
+            _slideAnimTimer?.Stop();
+            if (window?.AppWindow != null)
+            {
+                window.AppWindow.Move(_animTarget);
+            }
+            _onAnimComplete?.Invoke();
+        }
+    }
+
+    private void EnsureTopmost(Window window)
+    {
+        var hWnd = WindowNative.GetWindowHandle(window);
+        if (hWnd != IntPtr.Zero)
+        {
+            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
     }
 
     public DockOrientation GetSuggestedOrientation(DockOrientation currentSetting)

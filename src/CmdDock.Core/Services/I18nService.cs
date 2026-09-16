@@ -609,7 +609,10 @@ public class I18nService
         ["MiniDock.NoLogs"] = "暂无执行记录",
         ["Settings.StartupView"] = "启动应用时默认视图",
         ["Settings.StartupViewFull"] = "完整管理窗口 (默认)",
-        ["Settings.StartupViewMini"] = "桌面小窗口 / Dock 栏"
+        ["Settings.StartupViewMini"] = "桌面小窗口 / Dock 栏",
+        ["Tray.OpenMain"] = "打开主窗口",
+        ["Tray.OpenMini"] = "桌面小窗口",
+        ["Tray.Exit"] = "退出应用"
     };
 
     private static readonly Dictionary<string, string> _enStrings = new(StringComparer.OrdinalIgnoreCase)
@@ -1000,6 +1003,9 @@ Uninstalling CmdDock via Windows Settings or Microsoft Store completely removes 
         ["MiniDock.NoLogs"] = "No execution history yet",
         ["Settings.StartupView"] = "Default View on Startup",
         ["Settings.StartupViewFull"] = "Full Management Window (Default)",
-        ["Settings.StartupViewMini"] = "Desktop Mini Dock"
+        ["Settings.StartupViewMini"] = "Desktop Mini Dock",
+        ["Tray.OpenMain"] = "Open Main Window",
+        ["Tray.OpenMini"] = "Desktop Mini Dock",
+        ["Tray.Exit"] = "Exit CmdDock"
     };
 }
