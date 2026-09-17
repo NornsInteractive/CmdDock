@@ -145,8 +145,8 @@ public class WindowMorphService
         // 2. Restore MainWindow
         if (_mainWindow != null)
         {
-            var fullWidth = settings.FullWidth > 500 ? settings.FullWidth : 1100;
-            var fullHeight = settings.FullHeight > 400 ? settings.FullHeight : 750;
+            var fullWidth = settings.FullWidth >= 1320 ? settings.FullWidth : 1320;
+            var fullHeight = settings.FullHeight >= 820 ? settings.FullHeight : 820;
             _mainWindow.AppWindow.Resize(new SizeInt32(fullWidth, fullHeight));
 
             DesktopPinService.ApplyPinMode(_mainWindow, DesktopPinMode.Normal);

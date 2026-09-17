@@ -48,6 +48,7 @@ public class EdgeSnapService
     private DispatcherTimer? _monitorTimer;
     private DispatcherTimer? _slideAnimTimer;
     private bool _isCurrentlyHidden;
+    private bool _isAnimating;
     private SnappedEdge _lastSnappedEdge = SnappedEdge.None;
     private PointInt32 _restoredPosition;
     private int _mouseLeaveCount = 0;
@@ -166,15 +167,16 @@ public class EdgeSnapService
             }
         }
 
+        if (edge != SnappedEdge.None)
+        {
+            _restoredPosition = new PointInt32(newX, newY);
+        }
+
         if (applySnap)
         {
             if (newX != pos.X || newY != pos.Y)
             {
                 appWindow.Move(new PointInt32(newX, newY));
-            }
-            if (edge != SnappedEdge.None)
-            {
-                _restoredPosition = new PointInt32(newX, newY);
             }
         }
 
@@ -189,7 +191,7 @@ public class EdgeSnapService
 
     private void OnMonitorTick(object? sender, object e)
     {
-        if (!_autoHideEnabled || IsDragging) return;
+        if (!_autoHideEnabled || IsDragging || _isAnimating) return;
 
         var window = TargetWindow;
         if (window == null) return;
@@ -220,19 +222,19 @@ public class EdgeSnapService
             switch (_lastSnappedEdge)
             {
                 case SnappedEdge.Top:
-                    isMouseOverEdge = cursor.Y <= work.Y + 8 &&
-                                      cursor.X >= _restoredPosition.X - 15 &&
-                                      cursor.X <= _restoredPosition.X + size.Width + 15;
+                    isMouseOverEdge = cursor.Y <= work.Y + 12 &&
+                                      cursor.X >= _restoredPosition.X - 25 &&
+                                      cursor.X <= _restoredPosition.X + size.Width + 25;
                     break;
                 case SnappedEdge.Left:
-                    isMouseOverEdge = cursor.X <= work.X + 8 &&
-                                      cursor.Y >= _restoredPosition.Y - 15 &&
-                                      cursor.Y <= _restoredPosition.Y + size.Height + 15;
+                    isMouseOverEdge = cursor.X <= work.X + 12 &&
+                                      cursor.Y >= _restoredPosition.Y - 25 &&
+                                      cursor.Y <= _restoredPosition.Y + size.Height + 25;
                     break;
                 case SnappedEdge.Right:
-                    isMouseOverEdge = cursor.X >= work.X + work.Width - 8 &&
-                                      cursor.Y >= _restoredPosition.Y - 15 &&
-                                      cursor.Y <= _restoredPosition.Y + size.Height + 15;
+                    isMouseOverEdge = cursor.X >= work.X + work.Width - 12 &&
+                                      cursor.Y >= _restoredPosition.Y - 25 &&
+                                      cursor.Y <= _restoredPosition.Y + size.Height + 25;
                     break;
             }
 
@@ -244,9 +246,9 @@ public class EdgeSnapService
         }
         else
         {
-            // Check if mouse is inside the restored window rect (with 10px buffer)
-            bool isInsideWindow = cursor.X >= pos.X - 10 && cursor.X <= pos.X + size.Width + 10 &&
-                                  cursor.Y >= pos.Y - 10 && cursor.Y <= pos.Y + size.Height + 10;
+            // Check if mouse is inside the restored window rect (with 15px buffer)
+            bool isInsideWindow = cursor.X >= pos.X - 15 && cursor.X <= pos.X + size.Width + 15 &&
+                                  cursor.Y >= pos.Y - 15 && cursor.Y <= pos.Y + size.Height + 15;
 
             if (isInsideWindow)
             {
@@ -269,14 +271,21 @@ public class EdgeSnapService
         var window = TargetWindow;
         if (window == null) return;
         var appWindow = window.AppWindow;
-        if (appWindow == null || _lastSnappedEdge == SnappedEdge.None || _isCurrentlyHidden) return;
+        if (appWindow == null || _lastSnappedEdge == SnappedEdge.None || _isCurrentlyHidden || _isAnimating) return;
 
         var displayArea = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
         if (displayArea == null) return;
 
         var work = displayArea.WorkArea;
-        _restoredPosition = appWindow.Position;
         var size = appWindow.Size;
+
+        // Only update restored position if the window is currently positioned inside visible work area
+        var curPos = appWindow.Position;
+        if (curPos.X >= work.X - 10 && curPos.X <= work.X + work.Width &&
+            curPos.Y >= work.Y - 10 && curPos.Y <= work.Y + work.Height)
+        {
+            _restoredPosition = curPos;
+        }
 
         var targetX = _restoredPosition.X;
         var targetY = _restoredPosition.Y;
@@ -296,20 +305,28 @@ public class EdgeSnapService
 
         var targetPos = new PointInt32(targetX, targetY);
 
+        // Turn off window resize border so mouse hovering over edge does NOT turn into resize cursor
+        var presenter = appWindow.Presenter as OverlappedPresenter;
+        if (presenter != null)
+        {
+            presenter.IsResizable = false;
+        }
+
+        _isCurrentlyHidden = true;
+        AutoHideStateChanged?.Invoke(true);
+
         if (animate)
         {
+            _isAnimating = true;
             StartSlideAnimation(targetPos, () =>
             {
-                _isCurrentlyHidden = true;
-                AutoHideStateChanged?.Invoke(true);
+                _isAnimating = false;
                 EnsureTopmost(window);
             });
         }
         else
         {
             appWindow.Move(targetPos);
-            _isCurrentlyHidden = true;
-            AutoHideStateChanged?.Invoke(true);
             EnsureTopmost(window);
         }
     }
@@ -319,21 +336,32 @@ public class EdgeSnapService
         var window = TargetWindow;
         if (window == null) return;
         var appWindow = window.AppWindow;
-        if (appWindow == null || !_isCurrentlyHidden) return;
+        if (appWindow == null || !_isCurrentlyHidden || _isAnimating) return;
+
+        _isCurrentlyHidden = false;
+        AutoHideStateChanged?.Invoke(false);
 
         if (animate)
         {
+            _isAnimating = true;
             StartSlideAnimation(_restoredPosition, () =>
             {
-                _isCurrentlyHidden = false;
-                AutoHideStateChanged?.Invoke(false);
+                _isAnimating = false;
+                var presenter = appWindow.Presenter as OverlappedPresenter;
+                if (presenter != null)
+                {
+                    presenter.IsResizable = true;
+                }
             });
         }
         else
         {
             appWindow.Move(_restoredPosition);
-            _isCurrentlyHidden = false;
-            AutoHideStateChanged?.Invoke(false);
+            var presenter = appWindow.Presenter as OverlappedPresenter;
+            if (presenter != null)
+            {
+                presenter.IsResizable = true;
+            }
         }
     }
 

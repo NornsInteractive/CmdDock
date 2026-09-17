@@ -65,8 +65,8 @@ public class MiniDockSettings
     public int MiniHeight { get; set; } = 500;
 
     [JsonPropertyName("fullWidth")]
-    public int FullWidth { get; set; } = 1000;
+    public int FullWidth { get; set; } = 1320;
 
     [JsonPropertyName("fullHeight")]
-    public int FullHeight { get; set; } = 680;
+    public int FullHeight { get; set; } = 820;
 }
