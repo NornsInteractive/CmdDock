@@ -248,6 +248,15 @@ public sealed partial class MiniDockPage : Page
         }
     }
 
+    private void Header_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingWindow)
+        {
+            _isDraggingWindow = false;
+            _edgeSnapService.IsDragging = false;
+        }
+    }
+
     private void Header_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         WindowMorphService.Instance.SwitchToFullView();

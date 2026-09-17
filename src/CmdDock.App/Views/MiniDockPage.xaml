@@ -26,7 +26,7 @@
         <!-- ========================================================================= -->
         <!-- VIEW 1: CARD DECK MODE (卡片控制面板模式)                                   -->
         <!-- ========================================================================= -->
-        <Grid x:Name="CardDeckContainer" Visibility="Visible" Padding="12">
+        <Grid x:Name="CardDeckContainer" Visibility="Visible" Padding="12,0,12,12">
             <Grid.RowDefinitions>
                 <!-- 0: Header & Controls -->
                 <RowDefinition Height="Auto" />
@@ -43,18 +43,28 @@
                   PointerPressed="Header_PointerPressed"
                   PointerMoved="Header_PointerMoved"
                   PointerReleased="Header_PointerReleased"
+                  PointerCaptureLost="Header_PointerCaptureLost"
                   DoubleTapped="Header_DoubleTapped"
-                  Padding="4,0,4,8">
+                  MinHeight="44"
+                  Padding="4,8,4,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Drag Handle & Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <FontIcon Glyph="&#xE737;" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                    <TextBlock Text="桌面小窗口" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </StackPanel>
+                <!-- Drag Handle & Title Area (Spans entire left side up to buttons) -->
+                <Grid Grid.Column="0"
+                      Background="Transparent"
+                      PointerPressed="Header_PointerPressed"
+                      PointerMoved="Header_PointerMoved"
+                      PointerReleased="Header_PointerReleased"
+                      PointerCaptureLost="Header_PointerCaptureLost"
+                      DoubleTapped="Header_DoubleTapped">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsHitTestVisible="False">
+                        <FontIcon Glyph="&#xE737;" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                        <TextBlock Text="桌面小窗口" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Grid>
 
                 <!-- Action Toolbar -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
@@ -241,14 +251,21 @@
         <Grid x:Name="DockBarContainer" Visibility="Collapsed" Padding="6" Background="Transparent"
               PointerPressed="Header_PointerPressed"
               PointerMoved="Header_PointerMoved"
-              PointerReleased="Header_PointerReleased">
-            <StackPanel x:Name="DockBarStack" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+              PointerReleased="Header_PointerReleased"
+              PointerCaptureLost="Header_PointerCaptureLost">
+            <StackPanel x:Name="DockBarStack" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"
+                        Background="Transparent"
+                        PointerPressed="Header_PointerPressed"
+                        PointerMoved="Header_PointerMoved"
+                        PointerReleased="Header_PointerReleased"
+                        PointerCaptureLost="Header_PointerCaptureLost">
                 <!-- Drag Handle & Controls on Dock Bar -->
                 <Button x:Name="DockBarHandleBtn"
                         Width="28" Height="28" Padding="0"
                         PointerPressed="Header_PointerPressed"
                         PointerMoved="Header_PointerMoved"
                         PointerReleased="Header_PointerReleased"
+                        PointerCaptureLost="Header_PointerCaptureLost"
                         DoubleTapped="Header_DoubleTapped"
                         ToolTipService.ToolTip="按住拖动 / 双击展开大窗口">
                     <FontIcon Glyph="&#xE765;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
