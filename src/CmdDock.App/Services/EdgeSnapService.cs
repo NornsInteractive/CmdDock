@@ -67,6 +67,15 @@ public class EdgeSnapService
 
     public SnappedEdge CurrentSnappedEdge => _lastSnappedEdge;
     public bool IsCurrentlyHidden => _isCurrentlyHidden;
+    public PointInt32 RestoredPosition => _restoredPosition;
+
+    public void EnsureVisibleAndUnhidden()
+    {
+        _isCurrentlyHidden = false;
+        _isAnimating = false;
+        _slideAnimTimer?.Stop();
+        _mouseLeaveCount = 0;
+    }
 
     public EdgeSnapService(Window? window = null)
     {
@@ -172,7 +181,12 @@ public class EdgeSnapService
             _restoredPosition = new PointInt32(newX, newY);
         }
 
-        if (applySnap)
+        // Apply snap if requested, OR if window is stranded off-screen in hidden margin
+        bool isStrandedOffScreen = pos.X >= work.X + work.Width - 10 || 
+                                   pos.X + size.Width <= work.X + 10 || 
+                                   pos.Y + size.Height <= work.Y + 10;
+
+        if (applySnap || isStrandedOffScreen)
         {
             if (newX != pos.X || newY != pos.Y)
             {

@@ -94,5 +94,6 @@ public sealed class MiniDockWindow : Window
         {
             _instance = null;
         }
+        CmdDock_App.Services.WindowMorphService.Instance.ResetMiniDockWindow();
     }
 }

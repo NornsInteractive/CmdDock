@@ -73,6 +73,7 @@ public class WindowMorphService
         if (_miniDockWindow == null)
         {
             _miniDockWindow = new MiniDockWindow();
+            _miniDockWindow.Closed += (_, _) => _miniDockWindow = null;
         }
 
         var appWindow = _miniDockWindow.AppWindow;
@@ -98,18 +99,22 @@ public class WindowMorphService
             targetHeight = settings.MiniHeight > 200 ? settings.MiniHeight : 500;
         }
 
-        // 4. Reposition & Resize MiniDockWindow
-        if (settings.WindowX.HasValue && settings.WindowY.HasValue)
-        {
-            appWindow.MoveAndResize(new RectInt32(settings.WindowX.Value, settings.WindowY.Value, targetWidth, targetHeight));
-        }
-        else
-        {
-            appWindow.Resize(new SizeInt32(targetWidth, targetHeight));
-        }
+        // 4. Reposition & Resize MiniDockWindow safely within work area
+        var displayArea = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
+        var work = displayArea?.WorkArea ?? new RectInt32(0, 0, 1920, 1080);
+
+        int posX = settings.WindowX ?? (work.X + (work.Width - targetWidth) / 2);
+        int posY = settings.WindowY ?? (work.Y + (work.Height - targetHeight) / 2);
+
+        // Clamping ensures the window is NEVER off-screen or stuck in an edge-hide margin
+        posX = Math.Clamp(posX, work.X, Math.Max(work.X, work.X + work.Width - targetWidth));
+        posY = Math.Clamp(posY, work.Y, Math.Max(work.Y, work.Y + work.Height - targetHeight));
+
+        appWindow.MoveAndResize(new RectInt32(posX, posY, targetWidth, targetHeight));
 
         // 5. Update UI mode inside DockPage
         _miniDockWindow.DockPage?.SetDockMode(settings.DockMode);
+        _miniDockWindow.DockPage?.EdgeSnapService?.EnsureVisibleAndUnhidden();
 
         // 6. Apply Pin Mode (AlwaysOnTop / PinToDesktop / Normal)
         DesktopPinService.ApplyPinMode(_miniDockWindow, settings.PinMode);
@@ -123,6 +128,11 @@ public class WindowMorphService
         ViewModeChanged?.Invoke(_currentViewMode);
     }
 
+    public void ResetMiniDockWindow()
+    {
+        _miniDockWindow = null;
+    }
+
     public void SwitchToFullView()
     {
         var settings = MiniDockSettingsService.Instance.LoadSettings();
@@ -130,8 +140,25 @@ public class WindowMorphService
         // 1. Save Mini Dock position & size, and hide MiniDockWindow
         if (_miniDockWindow != null)
         {
-            settings.WindowX = _miniDockWindow.AppWindow.Position.X;
-            settings.WindowY = _miniDockWindow.AppWindow.Position.Y;
+            var snapService = _miniDockWindow.DockPage?.EdgeSnapService;
+            var pos = (snapService != null && snapService.IsCurrentlyHidden)
+                ? snapService.RestoredPosition
+                : _miniDockWindow.AppWindow.Position;
+
+            var displayArea = DisplayArea.GetFromWindowId(_miniDockWindow.AppWindow.Id, DisplayAreaFallback.Primary);
+            if (displayArea != null)
+            {
+                var work = displayArea.WorkArea;
+                var size = _miniDockWindow.AppWindow.Size;
+                settings.WindowX = Math.Clamp(pos.X, work.X, Math.Max(work.X, work.X + work.Width - size.Width));
+                settings.WindowY = Math.Clamp(pos.Y, work.Y, Math.Max(work.Y, work.Y + work.Height - size.Height));
+            }
+            else
+            {
+                settings.WindowX = pos.X;
+                settings.WindowY = pos.Y;
+            }
+
             if (settings.DockMode == MiniDockMode.CardDeck)
             {
                 settings.MiniWidth = _miniDockWindow.AppWindow.Size.Width;

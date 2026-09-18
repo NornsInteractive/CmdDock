@@ -25,6 +25,7 @@ public sealed partial class MiniDockPage : Page
     private readonly ILogService _logService;
     private readonly CommandExecutor _commandExecutor;
     private readonly EdgeSnapService _edgeSnapService;
+    public EdgeSnapService EdgeSnapService => _edgeSnapService;
 
     private MiniDockSettings _settings;
     private string _selectedCategory = "全部";
