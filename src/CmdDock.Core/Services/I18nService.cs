@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace CmdDock.Core.Services;
 
-public class I18nService
+public partial class I18nService
 {
     private static readonly Lazy<I18nService> _instance = new(() => new I18nService());
     public static I18nService Instance => _instance.Value;
@@ -41,20 +41,55 @@ public class I18nService
         get
         {
             var config = CurrentLanguage;
-            if (config == AppSettingsService.LanguageChinese)
+            if (config != AppSettingsService.LanguageSystem && AppSettingsService.SupportedLanguages.Contains(config))
             {
-                return AppSettingsService.LanguageChinese;
-            }
-            if (config == AppSettingsService.LanguageEnglish)
-            {
-                return AppSettingsService.LanguageEnglish;
+                return config;
             }
 
             // Follow system: Check system UI culture
             var cultureName = CultureInfo.CurrentUICulture.Name;
+            if (cultureName.StartsWith("zh-TW", StringComparison.OrdinalIgnoreCase) ||
+                cultureName.StartsWith("zh-HK", StringComparison.OrdinalIgnoreCase) ||
+                cultureName.StartsWith("zh-MO", StringComparison.OrdinalIgnoreCase) ||
+                cultureName.StartsWith("zh-Hant", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguageTraditionalChinese;
+            }
             if (cultureName.StartsWith("zh", StringComparison.OrdinalIgnoreCase))
             {
                 return AppSettingsService.LanguageChinese;
+            }
+            if (cultureName.StartsWith("ja", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguageJapanese;
+            }
+            if (cultureName.StartsWith("ko", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguageKorean;
+            }
+            if (cultureName.StartsWith("de", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguageGerman;
+            }
+            if (cultureName.StartsWith("fr", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguageFrench;
+            }
+            if (cultureName.StartsWith("es", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguageSpanish;
+            }
+            if (cultureName.StartsWith("it", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguageItalian;
+            }
+            if (cultureName.StartsWith("pt", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguagePortuguese;
+            }
+            if (cultureName.StartsWith("ru", StringComparison.OrdinalIgnoreCase))
+            {
+                return AppSettingsService.LanguageRussian;
             }
 
             return AppSettingsService.LanguageEnglish;
@@ -66,23 +101,40 @@ public class I18nService
     public string GetString(string key, string? fallback = null)
     {
         var lang = EffectiveLanguage;
-        if (lang == AppSettingsService.LanguageChinese)
+        var dict = GetDictionaryForLanguage(lang);
+        if (dict != null && dict.TryGetValue(key, out var val))
         {
-            if (_zhStrings.TryGetValue(key, out var val))
-            {
-                return val;
-            }
+            return val;
         }
-        else
+
+        if (_enStrings.TryGetValue(key, out var enVal))
         {
-            if (_enStrings.TryGetValue(key, out var val))
-            {
-                return val;
-            }
+            return enVal;
+        }
+
+        if (_zhStrings.TryGetValue(key, out var zhVal))
+        {
+            return zhVal;
         }
 
         return fallback ?? key;
     }
+
+    private static Dictionary<string, string>? GetDictionaryForLanguage(string lang) => lang switch
+    {
+        AppSettingsService.LanguageChinese => _zhStrings,
+        AppSettingsService.LanguageEnglish => _enStrings,
+        AppSettingsService.LanguageTraditionalChinese => _zhTwStrings,
+        AppSettingsService.LanguageJapanese => _jaStrings,
+        AppSettingsService.LanguageKorean => _koStrings,
+        AppSettingsService.LanguageGerman => _deStrings,
+        AppSettingsService.LanguageFrench => _frStrings,
+        AppSettingsService.LanguageSpanish => _esStrings,
+        AppSettingsService.LanguageItalian => _itStrings,
+        AppSettingsService.LanguagePortuguese => _ptStrings,
+        AppSettingsService.LanguageRussian => _ruStrings,
+        _ => null
+    };
 
     public string Format(string key, params object[] args)
     {
@@ -433,8 +485,17 @@ public class I18nService
         ["Settings.Language"] = "显示语言",
         ["Settings.LanguageDesc"] = "选择 CmdDock 的界面显示语言，默认跟随 Windows 系统首选语言。",
         ["Settings.LangSystem"] = "跟随系统 (默认)",
-        ["Settings.LangChinese"] = "简体中文",
+        ["Settings.LangChinese"] = "简体中文 (Simplified Chinese)",
+        ["Settings.LangTraditionalChinese"] = "繁體中文 (Traditional Chinese)",
         ["Settings.LangEnglish"] = "English",
+        ["Settings.LangJapanese"] = "日本語 (Japanese)",
+        ["Settings.LangKorean"] = "한국어 (Korean)",
+        ["Settings.LangGerman"] = "Deutsch (German)",
+        ["Settings.LangFrench"] = "Français (French)",
+        ["Settings.LangSpanish"] = "Español (Spanish)",
+        ["Settings.LangItalian"] = "Italiano (Italian)",
+        ["Settings.LangPortuguese"] = "Português (Brasil)",
+        ["Settings.LangRussian"] = "Русский (Russian)",
         ["Settings.About"] = "关于 CmdDock",
         ["Settings.AboutDesc"] = "现代化 Windows 11 快捷命令停泊坞与桌面小组件",
         ["Settings.Version"] = "版本: 1.0.3.0 (Windows App SDK + .NET 8)",
@@ -846,7 +907,16 @@ public class I18nService
         ["Settings.LanguageDesc"] = "Select CmdDock's interface language. Follows Windows preferred language by default.",
         ["Settings.LangSystem"] = "Follow System (Default)",
         ["Settings.LangChinese"] = "简体中文 (Simplified Chinese)",
+        ["Settings.LangTraditionalChinese"] = "繁體中文 (Traditional Chinese)",
         ["Settings.LangEnglish"] = "English",
+        ["Settings.LangJapanese"] = "日本語 (Japanese)",
+        ["Settings.LangKorean"] = "한국어 (Korean)",
+        ["Settings.LangGerman"] = "Deutsch (German)",
+        ["Settings.LangFrench"] = "Français (French)",
+        ["Settings.LangSpanish"] = "Español (Spanish)",
+        ["Settings.LangItalian"] = "Italiano (Italian)",
+        ["Settings.LangPortuguese"] = "Português (Brasil)",
+        ["Settings.LangRussian"] = "Русский (Russian)",
         ["Settings.About"] = "About CmdDock",
         ["Settings.AboutDesc"] = "Modern Windows 11 Command Dock & Desktop Widget",
         ["Settings.Version"] = "Version: 1.0.3.0 (Windows App SDK + .NET 8)",

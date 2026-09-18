@@ -752,7 +752,16 @@ public sealed partial class MainPage : Page
         SettingsLanguageDesc.Text = i18n["Settings.LanguageDesc"];
         LangItemSystem.Content = i18n["Settings.LangSystem"];
         LangItemChinese.Content = i18n["Settings.LangChinese"];
+        LangItemTraditionalChinese.Content = i18n["Settings.LangTraditionalChinese"];
         LangItemEnglish.Content = i18n["Settings.LangEnglish"];
+        LangItemJapanese.Content = i18n["Settings.LangJapanese"];
+        LangItemKorean.Content = i18n["Settings.LangKorean"];
+        LangItemGerman.Content = i18n["Settings.LangGerman"];
+        LangItemFrench.Content = i18n["Settings.LangFrench"];
+        LangItemSpanish.Content = i18n["Settings.LangSpanish"];
+        LangItemItalian.Content = i18n["Settings.LangItalian"];
+        LangItemPortuguese.Content = i18n["Settings.LangPortuguese"];
+        LangItemRussian.Content = i18n["Settings.LangRussian"];
 
         SettingsMiniDockGroupText.Text = i18n["Settings.MiniDockGroup"];
         SettingsStartupViewLabel.Text = i18n["Settings.StartupView"];

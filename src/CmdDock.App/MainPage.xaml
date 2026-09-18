@@ -820,12 +820,21 @@
                                     <ComboBox
                                         x:Name="LanguageSettingCombo"
                                         Grid.Column="1"
-                                        Width="180"
+                                        Width="220"
                                         VerticalAlignment="Center"
                                         SelectionChanged="LanguageSettingCombo_SelectionChanged">
                                         <ComboBoxItem x:Name="LangItemSystem" Tag="system" Content="跟随系统 (默认)" />
-                                        <ComboBoxItem x:Name="LangItemChinese" Tag="zh-CN" Content="简体中文" />
+                                        <ComboBoxItem x:Name="LangItemChinese" Tag="zh-CN" Content="简体中文 (Simplified Chinese)" />
+                                        <ComboBoxItem x:Name="LangItemTraditionalChinese" Tag="zh-TW" Content="繁體中文 (Traditional Chinese)" />
                                         <ComboBoxItem x:Name="LangItemEnglish" Tag="en-US" Content="English" />
+                                        <ComboBoxItem x:Name="LangItemJapanese" Tag="ja-JP" Content="日本語 (Japanese)" />
+                                        <ComboBoxItem x:Name="LangItemKorean" Tag="ko-KR" Content="한국어 (Korean)" />
+                                        <ComboBoxItem x:Name="LangItemGerman" Tag="de-DE" Content="Deutsch (German)" />
+                                        <ComboBoxItem x:Name="LangItemFrench" Tag="fr-FR" Content="Français (French)" />
+                                        <ComboBoxItem x:Name="LangItemSpanish" Tag="es-ES" Content="Español (Spanish)" />
+                                        <ComboBoxItem x:Name="LangItemItalian" Tag="it-IT" Content="Italiano (Italian)" />
+                                        <ComboBoxItem x:Name="LangItemPortuguese" Tag="pt-BR" Content="Português (Brasil)" />
+                                        <ComboBoxItem x:Name="LangItemRussian" Tag="ru-RU" Content="Русский (Russian)" />
                                     </ComboBox>
                                 </Grid>
                             </StackPanel>

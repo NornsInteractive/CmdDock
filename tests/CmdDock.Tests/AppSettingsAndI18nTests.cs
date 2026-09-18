@@ -93,7 +93,7 @@ public class AppSettingsAndI18nTests
         {
             service.CurrentLanguage = AppSettingsService.LanguageSystem;
             var effective = service.EffectiveLanguage;
-            Assert.True(effective == AppSettingsService.LanguageChinese || effective == AppSettingsService.LanguageEnglish);
+            Assert.True(AppSettingsService.SupportedLanguages.Contains(effective) && effective != AppSettingsService.LanguageSystem);
             Assert.NotEmpty(service["Nav.Settings"]);
         }
         finally
@@ -295,6 +295,62 @@ public class AppSettingsAndI18nTests
             service.CurrentLanguage = AppSettingsService.LanguageEnglish;
             Assert.Equal("Clean Temp Files", cmd.DisplayName);
             Assert.Contains("Deep clean current user temporary cache", cmd.DisplayDescription);
+        }
+        finally
+        {
+            service.CurrentLanguage = original;
+        }
+    }
+
+    [Fact]
+    public void I18nService_AllSupportedLanguages_ShouldProvideValidCoreStrings()
+    {
+        var service = I18nService.Instance;
+        var original = service.CurrentLanguage;
+        try
+        {
+            var languages = new[]
+            {
+                AppSettingsService.LanguageChinese,
+                AppSettingsService.LanguageTraditionalChinese,
+                AppSettingsService.LanguageEnglish,
+                AppSettingsService.LanguageJapanese,
+                AppSettingsService.LanguageKorean,
+                AppSettingsService.LanguageGerman,
+                AppSettingsService.LanguageFrench,
+                AppSettingsService.LanguageSpanish,
+                AppSettingsService.LanguageItalian,
+                AppSettingsService.LanguagePortuguese,
+                AppSettingsService.LanguageRussian
+            };
+
+            foreach (var lang in languages)
+            {
+                service.CurrentLanguage = lang;
+                Assert.Equal(lang, service.EffectiveLanguage);
+
+                // Core nav keys must be present and non-empty
+                Assert.NotEmpty(service["Nav.Commands"]);
+                Assert.NotEmpty(service["Nav.Presets"]);
+                Assert.NotEmpty(service["Nav.Logs"]);
+                Assert.NotEmpty(service["Nav.Widgets"]);
+                Assert.NotEmpty(service["Nav.Settings"]);
+
+                // Mini dock keys
+                Assert.NotEmpty(service["MiniDock.Title"]);
+                Assert.NotEmpty(service["MiniDock.SearchPlaceholder"]);
+
+                // Settings keys
+                Assert.NotEmpty(service["Settings.Title"]);
+                Assert.NotEmpty(service["Settings.MiniDockGroup"]);
+
+                // Categories
+                Assert.NotEmpty(service.TranslateCategory("全部"));
+                Assert.NotEmpty(service.TranslateCategory("网络"));
+
+                // Fallback test
+                Assert.Equal("FallbackVal", service.GetString("NonExistentKey123", "FallbackVal"));
+            }
         }
         finally
         {

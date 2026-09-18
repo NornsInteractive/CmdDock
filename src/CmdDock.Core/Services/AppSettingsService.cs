@@ -13,7 +13,32 @@ public static class AppSettingsService
 
     public const string LanguageSystem = "system";
     public const string LanguageChinese = "zh-CN";
+    public const string LanguageTraditionalChinese = "zh-TW";
     public const string LanguageEnglish = "en-US";
+    public const string LanguageJapanese = "ja-JP";
+    public const string LanguageKorean = "ko-KR";
+    public const string LanguageGerman = "de-DE";
+    public const string LanguageFrench = "fr-FR";
+    public const string LanguageSpanish = "es-ES";
+    public const string LanguageItalian = "it-IT";
+    public const string LanguagePortuguese = "pt-BR";
+    public const string LanguageRussian = "ru-RU";
+
+    public static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        LanguageSystem,
+        LanguageChinese,
+        LanguageTraditionalChinese,
+        LanguageEnglish,
+        LanguageJapanese,
+        LanguageKorean,
+        LanguageGerman,
+        LanguageFrench,
+        LanguageSpanish,
+        LanguageItalian,
+        LanguagePortuguese,
+        LanguageRussian
+    };
 
     public static string GetTheme()
     {
@@ -90,7 +115,7 @@ public static class AppSettingsService
                     if (doc.RootElement.TryGetProperty("language", out var prop))
                     {
                         var val = prop.GetString();
-                        if (val == LanguageChinese || val == LanguageEnglish || val == LanguageSystem)
+                        if (!string.IsNullOrEmpty(val) && SupportedLanguages.Contains(val))
                         {
                             return val;
                         }
@@ -126,20 +151,7 @@ public static class AppSettingsService
                     obj = new JsonObject();
                 }
 
-                string normalized;
-                if (string.Equals(language, LanguageChinese, StringComparison.OrdinalIgnoreCase))
-                {
-                    normalized = LanguageChinese;
-                }
-                else if (string.Equals(language, LanguageEnglish, StringComparison.OrdinalIgnoreCase))
-                {
-                    normalized = LanguageEnglish;
-                }
-                else
-                {
-                    normalized = LanguageSystem;
-                }
-
+                var normalized = SupportedLanguages.Contains(language) ? language : LanguageSystem;
                 obj["language"] = normalized;
                 File.WriteAllText(AppPaths.AppSettingsFilePath, obj.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
             }
