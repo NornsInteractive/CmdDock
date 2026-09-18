@@ -669,7 +669,7 @@ public sealed partial class MainPage : Page
         AddCommandBtnText.Text = i18n["Commands.New"];
         RefreshBtnText.Text = i18n["Commands.Refresh"];
         ManageCategoriesBtnText.Text = i18n["Commands.CategoryManage"];
-        SwitchToMiniDockBtnText.Text = i18n["MiniDock.SwitchToMini"];
+        SwitchToMiniDockBtnText.Text = i18n["MiniDock.SwitchToMiniShort"];
         ToolTipService.SetToolTip(SwitchToMiniDockBtn, i18n["MiniDock.SwitchToMini"]);
         ToolTipService.SetToolTip(GroupFilterCombo, i18n["Commands.CategoryFilterToolTip"]);
         ToolTipService.SetToolTip(ManageCategoriesBtn, i18n["Commands.CategoryManageToolTip"]);
@@ -753,6 +753,16 @@ public sealed partial class MainPage : Page
         LangItemSystem.Content = i18n["Settings.LangSystem"];
         LangItemChinese.Content = i18n["Settings.LangChinese"];
         LangItemEnglish.Content = i18n["Settings.LangEnglish"];
+
+        SettingsMiniDockGroupText.Text = i18n["Settings.MiniDockGroup"];
+        SettingsStartupViewLabel.Text = i18n["Settings.StartupView"];
+        SettingsStartupViewDesc.Text = i18n["Settings.StartupViewDesc"];
+        StartupViewItemFull.Content = i18n["Settings.StartupViewFull"];
+        StartupViewItemMini.Content = i18n["Settings.StartupViewMini"];
+        SettingsDockModeLabel.Text = i18n["Settings.DockMode"];
+        SettingsDockModeDesc.Text = i18n["Settings.DockModeDesc"];
+        DockModeItemCard.Content = i18n["MiniDock.ModeCard"];
+        DockModeItemBar.Content = i18n["MiniDock.ModeBar"];
 
         SettingsAboutGroupText.Text = i18n["Settings.About"];
         SettingsAboutDescText.Text = i18n["Settings.AboutDesc"];

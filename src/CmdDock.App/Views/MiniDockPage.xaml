@@ -62,7 +62,7 @@
                       DoubleTapped="Header_DoubleTapped">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsHitTestVisible="False">
                         <FontIcon Glyph="&#xE737;" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                        <TextBlock Text="桌面小窗口" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="MiniDockTitleText" Text="桌面小窗口" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
                 </Grid>
 
@@ -92,21 +92,21 @@
                         <Button.Flyout>
                             <Flyout>
                                 <StackPanel Width="220" Spacing="12">
-                                    <TextBlock Text="小窗口设置" FontWeight="SemiBold" FontSize="14" />
+                                    <TextBlock x:Name="MiniDockSettingsTitleText" Text="小窗口设置" FontWeight="SemiBold" FontSize="14" />
 
                                     <!-- Opacity Slider -->
                                     <StackPanel Spacing="4">
-                                        <TextBlock Text="窗口不透明度" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock x:Name="MiniDockOpacityLabel" Text="窗口不透明度" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         <Slider x:Name="OpacitySlider" />
                                     </StackPanel>
 
                                     <!-- Card Scale -->
                                     <StackPanel Spacing="4">
-                                        <TextBlock Text="卡片缩放" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock x:Name="MiniDockScaleLabel" Text="卡片缩放" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         <ComboBox x:Name="CardScaleCombo" HorizontalAlignment="Stretch">
-                                            <ComboBoxItem Content="紧凑小" Tag="Small" />
-                                            <ComboBoxItem Content="标准中" Tag="Medium" />
-                                            <ComboBoxItem Content="宽阔大" Tag="Large" />
+                                            <ComboBoxItem x:Name="CardScaleSmallItem" Content="紧凑小" Tag="Small" />
+                                            <ComboBoxItem x:Name="CardScaleMediumItem" Content="标准中" Tag="Medium" />
+                                            <ComboBoxItem x:Name="CardScaleLargeItem" Content="宽阔大" Tag="Large" />
                                         </ComboBox>
                                     </StackPanel>
 
@@ -141,7 +141,7 @@
             <StackPanel Grid.Row="1" Spacing="8" Margin="0,0,0,8">
                 <!-- Search Box -->
                 <TextBox x:Name="SearchBox"
-                         PlaceholderText="搜索快捷命令..."
+                         PlaceholderText="搜索快捷指令..."
                          FontSize="12"
                          TextChanged="SearchBox_TextChanged"
                          HorizontalAlignment="Stretch" />

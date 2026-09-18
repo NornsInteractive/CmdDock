@@ -51,13 +51,57 @@ public sealed partial class MiniDockPage : Page
         DockBarItemsControl.ItemsSource = DisplayedCommands;
 
         Loaded += MiniDockPage_Loaded;
+        Unloaded += MiniDockPage_Unloaded;
+        I18nService.Instance.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void MiniDockPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        I18nService.Instance.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            ApplyLocalizedTexts();
+        });
     }
 
     private async void MiniDockPage_Loaded(object sender, RoutedEventArgs e)
     {
         ApplySettingsToUI();
+        ApplyLocalizedTexts();
         await LoadDataAsync();
         _edgeSnapService.CheckAndSnap(applySnap: false);
+    }
+
+    private void ApplyLocalizedTexts()
+    {
+        var i18n = I18nService.Instance;
+        MiniDockTitleText.Text = i18n["MiniDock.Title"];
+        SearchBox.PlaceholderText = i18n["MiniDock.SearchPlaceholder"];
+
+        var isCard = _settings.DockMode == MiniDockMode.CardDeck;
+        ToolTipService.SetToolTip(ModeSwitchBtn, isCard 
+            ? i18n["MiniDock.SwitchToDockBar"] 
+            : i18n["MiniDock.SwitchToCardDeck"]);
+
+        ToolTipService.SetToolTip(SettingsBtn, i18n["MiniDock.Settings"]);
+        MiniDockSettingsTitleText.Text = i18n["MiniDock.SettingsTitle"];
+        MiniDockOpacityLabel.Text = i18n["MiniDock.Opacity"];
+        MiniDockScaleLabel.Text = i18n["MiniDock.Scale"];
+        CardScaleSmallItem.Content = i18n["MiniDock.ScaleSmall"];
+        CardScaleMediumItem.Content = i18n["MiniDock.ScaleMedium"];
+        CardScaleLargeItem.Content = i18n["MiniDock.ScaleLarge"];
+        AutoHideSwitch.Header = i18n["MiniDock.AutoHide"];
+        ToolTipService.SetToolTip(ExpandBtn, i18n["MiniDock.ExpandToFull"]);
+        ToolTipService.SetToolTip(CloseBtn, i18n["MiniDock.CloseApp"]);
+        ToolTipService.SetToolTip(AllCategoriesBtn, i18n["MiniDock.AllCategories"]);
+        ToolTipService.SetToolTip(DockBarHandleBtn, i18n["MiniDock.DockBarHandleToolTip"]);
+        ToolTipService.SetToolTip(DockBarSwitchModeBtn, i18n["MiniDock.SwitchToCardDeck"]);
+        UpdatePinModeVisuals(_settings.PinMode);
+        BuildCategoryPills();
     }
 
     private void ApplySettingsToUI()
@@ -429,15 +473,18 @@ public sealed partial class MiniDockPage : Page
 
     private void UpdateDockModeVisuals(MiniDockMode mode)
     {
+        var i18n = I18nService.Instance;
         if (mode == MiniDockMode.CardDeck)
         {
             CardDeckContainer.Visibility = Visibility.Visible;
             DockBarContainer.Visibility = Visibility.Collapsed;
+            ToolTipService.SetToolTip(ModeSwitchBtn, i18n["MiniDock.SwitchToDockBar"]);
         }
         else
         {
             CardDeckContainer.Visibility = Visibility.Collapsed;
             DockBarContainer.Visibility = Visibility.Visible;
+            ToolTipService.SetToolTip(ModeSwitchBtn, i18n["MiniDock.SwitchToCardDeck"]);
             UpdateDockBarOrientation();
         }
     }
@@ -711,15 +758,15 @@ public sealed partial class MiniDockPage : Page
             if (latest != null)
             {
                 var statusText = latest.Success 
-                    ? $"✓ 成功 (用时 {latest.DurationMs}ms, 代码 {latest.ExitCode})"
-                    : $"✗ 失败 (代码 {latest.ExitCode})";
+                    ? I18nService.Instance.Format("MiniDock.ExecutionSuccess", latest.DurationMs, latest.ExitCode)
+                    : I18nService.Instance.Format("MiniDock.ExecutionFailed", latest.ExitCode);
                 flyout.Items.Add(new MenuFlyoutItem { Text = statusText, IsEnabled = false });
 
                 if (!string.IsNullOrWhiteSpace(latest.Output))
                 {
                     var outputPreview = latest.Output.Trim();
                     if (outputPreview.Length > 80) outputPreview = outputPreview.Substring(0, 80) + "...";
-                    flyout.Items.Add(new MenuFlyoutItem { Text = $"输出: {outputPreview}" });
+                    flyout.Items.Add(new MenuFlyoutItem { Text = I18nService.Instance.Format("MiniDock.ExecutionOutput", outputPreview) });
                 }
             }
             else

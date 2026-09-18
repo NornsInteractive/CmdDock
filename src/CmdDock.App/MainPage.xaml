@@ -839,7 +839,7 @@
                             CornerRadius="12"
                             Padding="20">
                             <StackPanel Spacing="16">
-                                <TextBlock Text="桌面小窗口与启动视图" FontWeight="SemiBold" FontSize="16" />
+                                <TextBlock x:Name="SettingsMiniDockGroupText" Text="桌面小窗口与启动视图" FontWeight="SemiBold" FontSize="16" />
 
                                 <!-- Startup View Setting -->
                                 <Grid ColumnSpacing="16">
@@ -848,8 +848,8 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel VerticalAlignment="Center" Spacing="2">
-                                        <TextBlock Text="启动默认视图" FontWeight="Medium" FontSize="14" />
-                                        <TextBlock Text="选择打开 CmdDock 时默认呈现的窗口模式。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock x:Name="SettingsStartupViewLabel" Text="启动默认视图" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock x:Name="SettingsStartupViewDesc" Text="选择打开 CmdDock 时默认呈现的窗口模式。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                     </StackPanel>
 
                                     <ComboBox
@@ -858,8 +858,8 @@
                                         Width="180"
                                         VerticalAlignment="Center"
                                         SelectionChanged="StartupViewSettingCombo_SelectionChanged">
-                                        <ComboBoxItem Tag="full" Content="完整管理大窗口 (默认)" IsSelected="True" />
-                                        <ComboBoxItem Tag="mini" Content="桌面小窗口 / Dock 栏" />
+                                        <ComboBoxItem x:Name="StartupViewItemFull" Tag="full" Content="完整管理大窗口 (默认)" IsSelected="True" />
+                                        <ComboBoxItem x:Name="StartupViewItemMini" Tag="mini" Content="桌面小窗口 / Dock 栏" />
                                     </ComboBox>
                                 </Grid>
 
@@ -872,8 +872,8 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel VerticalAlignment="Center" Spacing="2">
-                                        <TextBlock Text="小窗口形态" FontWeight="Medium" FontSize="14" />
-                                        <TextBlock Text="进入桌面小窗口时默认使用的布局外观。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock x:Name="SettingsDockModeLabel" Text="小窗口形态" FontWeight="Medium" FontSize="14" />
+                                        <TextBlock x:Name="SettingsDockModeDesc" Text="进入桌面小窗口时默认使用的布局外观。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                     </StackPanel>
 
                                     <ComboBox
@@ -882,8 +882,8 @@
                                         Width="180"
                                         VerticalAlignment="Center"
                                         SelectionChanged="DefaultDockModeSettingCombo_SelectionChanged">
-                                        <ComboBoxItem Tag="CardDeck" Content="卡片控制面板模式" IsSelected="True" />
-                                        <ComboBoxItem Tag="DockBar" Content="紧凑 Dock 条模式" />
+                                        <ComboBoxItem x:Name="DockModeItemCard" Tag="CardDeck" Content="卡片控制面板模式" IsSelected="True" />
+                                        <ComboBoxItem x:Name="DockModeItemBar" Tag="DockBar" Content="紧凑 Dock 条模式" />
                                     </ComboBox>
                                 </Grid>
                             </StackPanel>
