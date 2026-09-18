@@ -447,17 +447,67 @@ public sealed partial class MiniDockPage : Page
         var orientation = _edgeSnapService.GetSuggestedOrientation(_settings.Orientation);
         if (orientation == DockOrientation.Vertical)
         {
-            DockBarStack.Orientation = Orientation.Vertical;
+            DockBarControlsStack.Orientation = Orientation.Vertical;
             DockBarSeparator.Width = 18;
             DockBarSeparator.Height = 1;
             DockBarSeparator.Margin = new Thickness(0, 2, 0, 2);
+
+            Grid.SetColumn(DockBarScrollViewer, 0);
+            Grid.SetRow(DockBarScrollViewer, 1);
+
+            DockBarScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            DockBarScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            DockBarScrollViewer.HorizontalScrollMode = ScrollMode.Disabled;
+            DockBarScrollViewer.VerticalScrollMode = ScrollMode.Enabled;
+
+            try
+            {
+                DockBarItemsControl.ItemsPanel = (ItemsPanelTemplate)Microsoft.UI.Xaml.Markup.XamlReader.Load(
+                    "<ItemsPanelTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><StackPanel Orientation='Vertical' Spacing='4'/></ItemsPanelTemplate>");
+            }
+            catch { }
         }
         else
         {
-            DockBarStack.Orientation = Orientation.Horizontal;
+            DockBarControlsStack.Orientation = Orientation.Horizontal;
             DockBarSeparator.Width = 1;
             DockBarSeparator.Height = 18;
             DockBarSeparator.Margin = new Thickness(2, 0, 2, 0);
+
+            Grid.SetColumn(DockBarScrollViewer, 1);
+            Grid.SetRow(DockBarScrollViewer, 0);
+
+            DockBarScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            DockBarScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            DockBarScrollViewer.HorizontalScrollMode = ScrollMode.Enabled;
+            DockBarScrollViewer.VerticalScrollMode = ScrollMode.Disabled;
+
+            try
+            {
+                DockBarItemsControl.ItemsPanel = (ItemsPanelTemplate)Microsoft.UI.Xaml.Markup.XamlReader.Load(
+                    "<ItemsPanelTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><StackPanel Orientation='Horizontal' Spacing='4'/></ItemsPanelTemplate>");
+            }
+            catch { }
+        }
+    }
+
+    private void DockBarScrollViewer_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        var delta = e.GetCurrentPoint(DockBarScrollViewer).Properties.MouseWheelDelta;
+        if (delta != 0)
+        {
+            var isVertical = DockBarControlsStack.Orientation == Orientation.Vertical;
+            if (isVertical)
+            {
+                var cur = DockBarScrollViewer.VerticalOffset;
+                DockBarScrollViewer.ChangeView(null, Math.Max(0, cur - delta), null, false);
+            }
+            else
+            {
+                var cur = DockBarScrollViewer.HorizontalOffset;
+                DockBarScrollViewer.ChangeView(Math.Max(0, cur - delta), null, null, false);
+            }
+            e.Handled = true;
         }
     }
 

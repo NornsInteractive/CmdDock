@@ -84,11 +84,11 @@ public class WindowMorphService
             if (settings.Orientation == DockOrientation.Vertical)
             {
                 targetWidth = 64;
-                targetHeight = 440;
+                targetHeight = settings.DockBarHeight >= 200 ? settings.DockBarHeight : 480;
             }
             else
             {
-                targetWidth = 460;
+                targetWidth = settings.DockBarWidth >= 200 ? settings.DockBarWidth : 480;
                 targetHeight = 64;
             }
         }
@@ -136,6 +136,17 @@ public class WindowMorphService
             {
                 settings.MiniWidth = _miniDockWindow.AppWindow.Size.Width;
                 settings.MiniHeight = _miniDockWindow.AppWindow.Size.Height;
+            }
+            else if (settings.DockMode == MiniDockMode.DockBar)
+            {
+                if (_miniDockWindow.AppWindow.Size.Width >= 160)
+                {
+                    settings.DockBarWidth = _miniDockWindow.AppWindow.Size.Width;
+                }
+                if (_miniDockWindow.AppWindow.Size.Height >= 160)
+                {
+                    settings.DockBarHeight = _miniDockWindow.AppWindow.Size.Height;
+                }
             }
             _miniDockWindow.AppWindow.Hide();
         }

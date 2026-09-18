@@ -22,6 +22,8 @@ public class MiniDockSettingsTests
         Assert.Equal(500, settings.MiniHeight);
         Assert.Equal(1320, settings.FullWidth);
         Assert.Equal(820, settings.FullHeight);
+        Assert.Equal(480, settings.DockBarWidth);
+        Assert.Equal(480, settings.DockBarHeight);
     }
 
     [Fact]

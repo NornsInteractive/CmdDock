@@ -69,4 +69,10 @@ public class MiniDockSettings
 
     [JsonPropertyName("fullHeight")]
     public int FullHeight { get; set; } = 820;
+
+    [JsonPropertyName("dockBarWidth")]
+    public int DockBarWidth { get; set; } = 480;
+
+    [JsonPropertyName("dockBarHeight")]
+    public int DockBarHeight { get; set; } = 480;
 }

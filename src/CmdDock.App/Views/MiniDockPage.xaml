@@ -272,40 +272,58 @@
               PointerMoved="Header_PointerMoved"
               PointerReleased="Header_PointerReleased"
               PointerCaptureLost="Header_PointerCaptureLost">
-            <StackPanel x:Name="DockBarStack" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"
-                        Background="Transparent"
-                        PointerPressed="Header_PointerPressed"
-                        PointerMoved="Header_PointerMoved"
-                        PointerReleased="Header_PointerReleased"
-                        PointerCaptureLost="Header_PointerCaptureLost">
+            <Grid x:Name="DockBarContentGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
                 <!-- Drag Handle & Controls on Dock Bar -->
-                <Button x:Name="DockBarHandleBtn"
-                        Width="28" Height="28" Padding="0"
-                        PointerPressed="Header_PointerPressed"
-                        PointerMoved="Header_PointerMoved"
-                        PointerReleased="Header_PointerReleased"
-                        PointerCaptureLost="Header_PointerCaptureLost"
-                        DoubleTapped="Header_DoubleTapped"
-                        ToolTipService.ToolTip="按住拖动 / 双击展开大窗口">
-                    <FontIcon Glyph="&#xE765;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                </Button>
+                <StackPanel x:Name="DockBarControlsStack" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"
+                            Background="Transparent"
+                            PointerPressed="Header_PointerPressed"
+                            PointerMoved="Header_PointerMoved"
+                            PointerReleased="Header_PointerReleased"
+                            PointerCaptureLost="Header_PointerCaptureLost">
+                    <Button x:Name="DockBarHandleBtn"
+                            Width="28" Height="28" Padding="0"
+                            PointerPressed="Header_PointerPressed"
+                            PointerMoved="Header_PointerMoved"
+                            PointerReleased="Header_PointerReleased"
+                            PointerCaptureLost="Header_PointerCaptureLost"
+                            DoubleTapped="Header_DoubleTapped"
+                            ToolTipService.ToolTip="按住拖动 / 双击展开大窗口">
+                        <FontIcon Glyph="&#xE765;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </Button>
 
-                <Button x:Name="DockBarSwitchModeBtn"
-                        Width="28" Height="28" Padding="0"
-                        ToolTipService.ToolTip="切换为卡片面板模式"
-                        Click="ModeSwitchBtn_Click">
-                    <FontIcon Glyph="&#xE7FB;" FontSize="11" />
-                </Button>
+                    <Button x:Name="DockBarSwitchModeBtn"
+                            Width="28" Height="28" Padding="0"
+                            ToolTipService.ToolTip="切换为卡片面板模式"
+                            Click="ModeSwitchBtn_Click">
+                        <FontIcon Glyph="&#xE7FB;" FontSize="11" />
+                    </Button>
 
-                <Rectangle x:Name="DockBarSeparator" Width="1" Height="18" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="2,0" />
+                    <Rectangle x:Name="DockBarSeparator" Width="1" Height="18" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="2,0" />
+                </StackPanel>
 
-                <!-- Dock Bar Items Collection -->
-                <ItemsControl x:Name="DockBarItemsControl">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel x:Name="DockItemsPanel" Orientation="Horizontal" Spacing="4" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
+                <!-- Scrollable Dock Bar Items Collection -->
+                <ScrollViewer x:Name="DockBarScrollViewer"
+                              Grid.Column="1" Grid.Row="0"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              HorizontalScrollMode="Enabled"
+                              VerticalScrollMode="Disabled"
+                              PointerWheelChanged="DockBarScrollViewer_PointerWheelChanged">
+                    <ItemsControl x:Name="DockBarItemsControl">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel x:Name="DockItemsPanel" Orientation="Horizontal" Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:CommandItem">
                             <Button Width="36" Height="36" Padding="0"
@@ -344,7 +362,8 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-            </StackPanel>
+                </ScrollViewer>
+            </Grid>
         </Grid>
     </Grid>
 </Page>

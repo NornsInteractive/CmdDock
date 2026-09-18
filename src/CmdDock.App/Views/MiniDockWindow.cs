@@ -73,6 +73,18 @@ public sealed class MiniDockWindow : Window
                     MiniDockSettingsService.Instance.SaveSettings(settings);
                 }
             }
+            else if (settings.DockMode == MiniDockMode.DockBar)
+            {
+                if (sender.Size.Width >= 160)
+                {
+                    settings.DockBarWidth = sender.Size.Width;
+                }
+                if (sender.Size.Height >= 160)
+                {
+                    settings.DockBarHeight = sender.Size.Height;
+                }
+                MiniDockSettingsService.Instance.SaveSettings(settings);
+            }
         }
     }
 
