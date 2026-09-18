@@ -90,6 +90,9 @@ public sealed partial class MiniDockPage : Page
         AutoHideSwitch.IsOn = _settings.EnableAutoHide;
         _edgeSnapService.SetupAutoHide(_settings.EnableAutoHide);
         AutoHideSwitch.Toggled += AutoHideSwitch_Toggled;
+
+        // 6. Tooltips
+        ToolTipService.SetToolTip(AllCategoriesBtn, I18nService.Instance["MiniDock.AllCategories"]);
     }
 
     private async Task LoadDataAsync()
@@ -140,13 +143,82 @@ public sealed partial class MiniDockPage : Page
             {
                 if (s is Button b && b.Tag is string chosen)
                 {
-                    _selectedCategory = chosen;
-                    BuildCategoryPills();
-                    FilterCommands();
+                    SelectCategory(chosen);
                 }
             };
 
             CategoryPillsPanel.Children.Add(btn);
+        }
+    }
+
+    private void SelectCategory(string chosen)
+    {
+        _selectedCategory = chosen;
+        BuildCategoryPills();
+        FilterCommands();
+
+        // Scroll the selected pill smoothly into view
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            foreach (var child in CategoryPillsPanel.Children)
+            {
+                if (child is Button b && b.Tag as string == chosen)
+                {
+                    b.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = true });
+                    break;
+                }
+            }
+        });
+    }
+
+    private void CategoryScrollViewer_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        var delta = e.GetCurrentPoint(CategoryScrollViewer).Properties.MouseWheelDelta;
+        if (delta != 0)
+        {
+            var currentOffset = CategoryScrollViewer.HorizontalOffset;
+            var targetOffset = Math.Max(0, currentOffset - delta);
+            CategoryScrollViewer.ChangeView(targetOffset, null, null, false);
+            e.Handled = true;
+        }
+    }
+
+    private void AllCategoriesBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var flyout = new MenuFlyout();
+
+        var titleItem = new MenuFlyoutItem
+        {
+            Text = $"{I18nService.Instance["MiniDock.AllCategories"]} ({Categories.Count})",
+            IsEnabled = false
+        };
+        flyout.Items.Add(titleItem);
+        flyout.Items.Add(new MenuFlyoutSeparator());
+
+        foreach (var cat in Categories)
+        {
+            var isSelected = cat == _selectedCategory;
+            var item = new ToggleMenuFlyoutItem
+            {
+                Text = I18nService.Instance.TranslateCategory(cat),
+                IsChecked = isSelected,
+                Tag = cat
+            };
+
+            item.Click += (s, _) =>
+            {
+                if (s is FrameworkElement fe && fe.Tag is string chosen)
+                {
+                    SelectCategory(chosen);
+                }
+            };
+
+            flyout.Items.Add(item);
+        }
+
+        if (sender is FrameworkElement target)
+        {
+            flyout.ShowAt(target);
         }
     }
 

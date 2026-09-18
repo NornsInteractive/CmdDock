@@ -146,13 +146,32 @@
                          TextChanged="SearchBox_TextChanged"
                          HorizontalAlignment="Stretch" />
 
-                <!-- Category Pills (Horizontal Scroll) -->
-                <ScrollViewer HorizontalScrollBarVisibility="Hidden"
-                              VerticalScrollBarVisibility="Disabled"
-                              HorizontalScrollMode="Enabled"
-                              VerticalScrollMode="Disabled">
-                    <StackPanel x:Name="CategoryPillsPanel" Orientation="Horizontal" Spacing="6" />
-                </ScrollViewer>
+                <!-- Category Pills (Horizontal Scroll + All Categories Flyout) -->
+                <Grid ColumnSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ScrollViewer x:Name="CategoryScrollViewer"
+                                  Grid.Column="0"
+                                  HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  HorizontalScrollMode="Enabled"
+                                  VerticalScrollMode="Disabled"
+                                  PointerWheelChanged="CategoryScrollViewer_PointerWheelChanged">
+                        <StackPanel x:Name="CategoryPillsPanel" Orientation="Horizontal" Spacing="6" />
+                    </ScrollViewer>
+
+                    <Button x:Name="AllCategoriesBtn"
+                            Grid.Column="1"
+                            Width="30" Height="28" Padding="0"
+                            CornerRadius="12"
+                            ToolTipService.ToolTip="全部分类列表"
+                            Click="AllCategoriesBtn_Click">
+                        <FontIcon Glyph="&#xE8EC;" FontSize="12" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    </Button>
+                </Grid>
             </StackPanel>
 
             <!-- Command Cards Scroll Area -->
