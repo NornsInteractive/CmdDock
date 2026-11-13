@@ -1,7 +1,19 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace CmdDock.Core.Models;
 
-public class IconItem
+public class IconItem : ObservableObject
 {
+    public IconItem()
+    {
+        CmdDock.Core.Services.I18nService.Instance.LanguageChanged += () =>
+        {
+            OnPropertyChanged(nameof(LocalizedName));
+            OnPropertyChanged(nameof(LocalizedCategory));
+            OnPropertyChanged(nameof(DisplayTitle));
+        };
+    }
+
     public string Glyph { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string EnglishName { get; set; } = string.Empty;

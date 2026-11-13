@@ -26,7 +26,7 @@ public partial class MainViewModel : ObservableObject
     private ObservableCollection<string> _groups = new();
 
     [ObservableProperty]
-    private string _selectedGroup = "全部";
+    private string _selectedGroup = "__all__";
 
     [ObservableProperty]
     private bool _isLoading;
@@ -43,9 +43,17 @@ public partial class MainViewModel : ObservableObject
     public ICategoryService CategoryService => _categoryService;
     public ICommandService CommandService => _commandService;
 
+    private Action? _statusMessageUpdater;
+
+    public void SetStatus(Action updater)
+    {
+        _statusMessageUpdater = updater;
+        updater();
+    }
+
     public MainViewModel()
     {
-        _statusMessage = I18nService.Instance["Status.Ready"];
+        SetStatus(() => StatusMessage = I18nService.Instance["Status.Ready"]);
         _presetService = new PresetService();
         _commandService = new CommandService(_presetService);
         _categoryService = new CategoryService(commandService: _commandService);
@@ -55,10 +63,7 @@ public partial class MainViewModel : ObservableObject
         _logService.LogsUpdated += (_, _) => _ = RefreshLogsAsync();
         I18nService.Instance.LanguageChanged += () =>
         {
-            if (StatusMessage == "就绪" || StatusMessage == "Ready")
-            {
-                StatusMessage = I18nService.Instance["Status.Ready"];
-            }
+            _statusMessageUpdater?.Invoke();
         };
     }
 
@@ -89,7 +94,7 @@ public partial class MainViewModel : ObservableObject
     {
         var cats = await _categoryService.GetAllCategoriesAsync(forceReload: true);
         Groups.Clear();
-        Groups.Add("全部");
+        Groups.Add("__all__");
         foreach (var c in cats)
         {
             if (!Groups.Contains(c))
@@ -140,8 +145,7 @@ public partial class MainViewModel : ObservableObject
     public void FilterCommands()
     {
         bool isAll = string.IsNullOrWhiteSpace(SelectedGroup) || 
-                     SelectedGroup == "全部" || 
-                     SelectedGroup == "All" || 
+                     SelectedGroup == "__all__" || 
                      string.Equals(SelectedGroup, I18nService.Instance["Commands.AllCategories"], StringComparison.OrdinalIgnoreCase);
 
         var query = (isAll
@@ -263,14 +267,14 @@ public partial class MainViewModel : ObservableObject
     {
         if (item == null) return;
 
-        StatusMessage = I18nService.Instance.Format("Status.Executing", item.DisplayName);
+        SetStatus(() => StatusMessage = I18nService.Instance.Format("Status.Executing", item.DisplayName));
         item.LastRunStatus = ExecutionStatus.Running;
 
         var result = await _commandExecutor.ExecuteAsync(item);
 
-        StatusMessage = result.Success 
+        SetStatus(() => StatusMessage = result.Success 
             ? I18nService.Instance.Format("Status.ExecSuccess", item.DisplayName, result.DurationMs) 
-            : I18nService.Instance.Format("Status.ExecFailed", item.DisplayName, result.ExitCode);
+            : I18nService.Instance.Format("Status.ExecFailed", item.DisplayName, result.ExitCode));
 
         await RefreshLogsAsync();
         WidgetNotificationService.NotifyWidgets(Commands);
@@ -306,7 +310,7 @@ public partial class MainViewModel : ObservableObject
 
         await _commandService.DeleteAsync(item.Id);
 
-        StatusMessage = I18nService.Instance.Format("Status.Deleted", item.DisplayName);
+        SetStatus(() => StatusMessage = I18nService.Instance.Format("Status.Deleted", item.DisplayName));
         WidgetNotificationService.NotifyWidgets(Commands);
     }
 
@@ -317,9 +321,9 @@ public partial class MainViewModel : ObservableObject
 
         await _commandService.AddOrUpdateAsync(item);
 
-        StatusMessage = item.ShowInWidget 
+        SetStatus(() => StatusMessage = item.ShowInWidget 
             ? I18nService.Instance.Format("Status.AddedToWidget", item.DisplayName) 
-            : I18nService.Instance.Format("Status.HiddenFromWidget", item.DisplayName);
+            : I18nService.Instance.Format("Status.HiddenFromWidget", item.DisplayName));
         WidgetNotificationService.NotifyWidgets(Commands);
     }
 
@@ -347,7 +351,7 @@ public partial class MainViewModel : ObservableObject
 
         // Add to in-memory collections seamlessly
         Commands.Add(newItem);
-        if (SelectedGroup == "全部" || SelectedGroup == newItem.Group)
+        if (SelectedGroup == "__all__" || SelectedGroup == newItem.Group)
         {
             FilteredCommands.Add(newItem);
         }
@@ -359,7 +363,7 @@ public partial class MainViewModel : ObservableObject
 
         await _commandService.AddOrUpdateAsync(newItem);
 
-        StatusMessage = I18nService.Instance.Format("Status.PresetAdded", newItem.DisplayName);
+        SetStatus(() => StatusMessage = I18nService.Instance.Format("Status.PresetAdded", newItem.DisplayName));
         WidgetNotificationService.NotifyWidgets(Commands);
     }
 
@@ -368,7 +372,7 @@ public partial class MainViewModel : ObservableObject
     {
         await _logService.ClearLogsAsync();
         Logs.Clear();
-        StatusMessage = I18nService.Instance["Status.LogsCleared"];
+        SetStatus(() => StatusMessage = I18nService.Instance["Status.LogsCleared"]);
     }
 
     public async Task SaveCommandAsync(CommandItem item)
@@ -396,7 +400,7 @@ public partial class MainViewModel : ObservableObject
         else
         {
             Commands.Add(item);
-            if (SelectedGroup == "全部" || SelectedGroup == item.Group)
+            if (SelectedGroup == "__all__" || SelectedGroup == item.Group)
             {
                 FilteredCommands.Add(item);
             }
@@ -413,7 +417,7 @@ public partial class MainViewModel : ObservableObject
 
         await _commandService.AddOrUpdateAsync(item);
 
-        StatusMessage = I18nService.Instance.Format("Status.Saved", item.DisplayName);
+        SetStatus(() => StatusMessage = I18nService.Instance.Format("Status.Saved", item.DisplayName));
         WidgetNotificationService.NotifyWidgets(Commands);
     }
 }

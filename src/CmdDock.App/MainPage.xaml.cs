@@ -73,7 +73,7 @@ public sealed partial class MainPage : Page
             {
                 new CategoryItem
                 {
-                    Name = "全部",
+                    Name = "__all__",
                     IconGlyph = "\uE8B9",
                     Order = -1
                 }

@@ -27,8 +27,10 @@ public sealed partial class MiniDockPage : Page
     private readonly EdgeSnapService _edgeSnapService;
     public EdgeSnapService EdgeSnapService => _edgeSnapService;
 
+    private const string AllCategoryKey = "__all__";
+
     private MiniDockSettings _settings;
-    private string _selectedCategory = "全部";
+    private string _selectedCategory = AllCategoryKey;
     private string _searchFilter = string.Empty;
 
     public ObservableCollection<CommandItem> AllCommands { get; } = new();
@@ -153,7 +155,7 @@ public sealed partial class MiniDockPage : Page
         // Load categories
         var cats = await _categoryService.GetAllCategoriesAsync();
         Categories.Clear();
-        Categories.Add("全部");
+        Categories.Add(AllCategoryKey);
         foreach (var cat in cats)
         {
             if (!Categories.Contains(cat))
@@ -173,7 +175,7 @@ public sealed partial class MiniDockPage : Page
         {
             var btn = new Button
             {
-                Content = I18nService.Instance.TranslateCategory(cat),
+                Content = cat == AllCategoryKey ? I18nService.Instance["Category.All"] : I18nService.Instance.TranslateCategory(cat),
                 Tag = cat,
                 Padding = new Thickness(10, 4, 10, 4),
                 CornerRadius = new CornerRadius(12),
@@ -272,7 +274,7 @@ public sealed partial class MiniDockPage : Page
         DisplayedCommands.Clear();
         var query = AllCommands.AsEnumerable();
 
-        if (!string.IsNullOrWhiteSpace(_selectedCategory) && _selectedCategory != "全部" && _selectedCategory != "All")
+        if (!string.IsNullOrWhiteSpace(_selectedCategory) && _selectedCategory != AllCategoryKey)
         {
             query = query.Where(c => c.Group == _selectedCategory);
         }

@@ -357,5 +357,95 @@ public class AppSettingsAndI18nTests
             service.CurrentLanguage = original;
         }
     }
+
+    [Fact]
+    public void I18nService_TranslateCategory_ShouldHandleAllCategoryKey()
+    {
+        var service = I18nService.Instance;
+        var original = service.CurrentLanguage;
+
+        try
+        {
+            service.CurrentLanguage = "zh-CN";
+            Assert.Equal("全部", service.TranslateCategory("__all__"));
+            Assert.Equal("全部", service.TranslateCategory("全部"));
+            Assert.Equal("全部", service.TranslateCategory("All"));
+
+            service.CurrentLanguage = "en-US";
+            Assert.Equal("All", service.TranslateCategory("__all__"));
+            Assert.Equal("All", service.TranslateCategory("全部"));
+            Assert.Equal("All", service.TranslateCategory("All"));
+
+            service.CurrentLanguage = "ja-JP";
+            Assert.Equal("すべて", service.TranslateCategory("__all__"));
+
+            service.CurrentLanguage = "de-DE";
+            Assert.Equal("Alle", service.TranslateCategory("__all__"));
+        }
+        finally
+        {
+            service.CurrentLanguage = original;
+        }
+    }
+
+    [Fact]
+    public void CategoryItem_DisplayName_ShouldTranslateAllKey()
+    {
+        var service = I18nService.Instance;
+        var original = service.CurrentLanguage;
+
+        try
+        {
+            var item = new CmdDock.Core.Models.CategoryItem
+            {
+                Name = "__all__"
+            };
+
+            service.CurrentLanguage = "zh-CN";
+            Assert.Equal("全部", item.DisplayName);
+
+            service.CurrentLanguage = "en-US";
+            Assert.Equal("All", item.DisplayName);
+        }
+        finally
+        {
+            service.CurrentLanguage = original;
+        }
+    }
+
+    [Fact]
+    public void IconItem_ObservableObject_ShouldRaisePropertyChangedOnLanguageChanged()
+    {
+        var service = I18nService.Instance;
+        var original = service.CurrentLanguage;
+
+        try
+        {
+            var icon = new CmdDock.Core.Models.IconItem
+            {
+                Name = "测试图标",
+                EnglishName = "Test Icon"
+            };
+
+            var notifiedProperties = new List<string>();
+            icon.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName != null) notifiedProperties.Add(e.PropertyName);
+            };
+
+            service.CurrentLanguage = "en-US";
+            Assert.Contains(nameof(icon.LocalizedName), notifiedProperties);
+            Assert.Equal("Test Icon", icon.LocalizedName);
+
+            notifiedProperties.Clear();
+            service.CurrentLanguage = "zh-CN";
+            Assert.Contains(nameof(icon.LocalizedName), notifiedProperties);
+            Assert.Equal("测试图标", icon.LocalizedName);
+        }
+        finally
+        {
+            service.CurrentLanguage = original;
+        }
+    }
 }
 

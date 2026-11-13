@@ -152,7 +152,12 @@ public partial class I18nService
     public string TranslateCategory(string? category)
     {
         if (string.IsNullOrWhiteSpace(category)) return string.Empty;
-        var key = $"Category.{category.Trim()}";
+        var trimmed = category.Trim();
+        if (trimmed == "__all__" || trimmed == "全部" || trimmed.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            return GetString("Category.All", fallback: GetString("Commands.AllCategories", "全部"));
+        }
+        var key = $"Category.{trimmed}";
         return GetString(key, fallback: category);
     }
 
