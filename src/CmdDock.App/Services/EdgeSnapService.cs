@@ -271,8 +271,8 @@ public class EdgeSnapService
             else
             {
                 _mouseLeaveCount++;
-                // After mouse leaves for ~300ms (4 ticks of 75ms), slide to hide
-                if (_mouseLeaveCount >= 4)
+                // After mouse leaves for ~600ms (8 ticks of 75ms), slide to hide
+                if (_mouseLeaveCount >= 8)
                 {
                     AnimateToHidden(animate: true);
                 }

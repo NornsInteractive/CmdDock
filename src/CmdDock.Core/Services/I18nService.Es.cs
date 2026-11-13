@@ -251,6 +251,7 @@ public partial class I18nService
         ["MiniDock.SwitchToMini"] = "Cambiar a mini dock de escritorio",
         ["MiniDock.SwitchToMiniShort"] = "Mini dock",
         ["MiniDock.ExpandToFull"] = "Expandir a vista completa",
+        ["MiniDock.ExpandToFullLogs"] = "Ver registros de ejecución completos",
         ["MiniDock.CloseApp"] = "Cerrar CmdDock",
         ["MiniDock.ModeCard"] = "Modo panel de tarjetas",
         ["MiniDock.ModeBar"] = "Modo barra dock compacta",

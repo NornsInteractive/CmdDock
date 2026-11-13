@@ -251,6 +251,7 @@ public partial class I18nService
         ["MiniDock.SwitchToMini"] = "デスクトップ ミニ ウィンドウに切り替え",
         ["MiniDock.SwitchToMiniShort"] = "ミニ ウィンドウ",
         ["MiniDock.ExpandToFull"] = "全体管理画面を展開",
+        ["MiniDock.ExpandToFullLogs"] = "詳細な実行ログを表示",
         ["MiniDock.CloseApp"] = "アプリを終了",
         ["MiniDock.ModeCard"] = "カード パネル モード",
         ["MiniDock.ModeBar"] = "コンパクト ドック バー モード",

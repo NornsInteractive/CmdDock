@@ -251,6 +251,7 @@ public partial class I18nService
         ["MiniDock.SwitchToMini"] = "切換為桌面小視窗",
         ["MiniDock.SwitchToMiniShort"] = "桌面小視窗",
         ["MiniDock.ExpandToFull"] = "展開為完整管理視圖",
+        ["MiniDock.ExpandToFullLogs"] = "檢視完整執行日誌",
         ["MiniDock.CloseApp"] = "結束應用程式",
         ["MiniDock.ModeCard"] = "卡片控制面板模式",
         ["MiniDock.ModeBar"] = "緊湊 Dock 列模式",

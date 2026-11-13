@@ -64,6 +64,11 @@ public sealed partial class MainPage : Page
         LogsListView.ItemsSource = ViewModel.Logs;
     }
 
+    public void NavigateToLogs()
+    {
+        NavView.SelectedItem = NavLogsItem;
+    }
+
     private async void UpdateGroupFilterItems()
     {
         try

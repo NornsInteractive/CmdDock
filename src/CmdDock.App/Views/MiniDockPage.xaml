@@ -26,7 +26,9 @@
         <!-- ========================================================================= -->
         <!-- VIEW 1: CARD DECK MODE (卡片控制面板模式)                                   -->
         <!-- ========================================================================= -->
-        <Grid x:Name="CardDeckContainer" Visibility="Visible" Padding="12,0,12,12">
+        <Grid x:Name="CardDeckContainer" Visibility="Visible" Padding="12,0,12,12"
+              Background="Transparent"
+              PointerPressed="CardDeckBackground_PointerPressed">
             <Grid.RowDefinitions>
                 <!-- 0: Header & Controls -->
                 <RowDefinition Height="Auto" />
@@ -317,7 +319,8 @@
                               VerticalScrollBarVisibility="Disabled"
                               HorizontalScrollMode="Enabled"
                               VerticalScrollMode="Disabled"
-                              PointerWheelChanged="DockBarScrollViewer_PointerWheelChanged">
+                              PointerWheelChanged="DockBarScrollViewer_PointerWheelChanged"
+                              PointerPressed="DockBarBackground_PointerPressed">
                     <ItemsControl x:Name="DockBarItemsControl">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>

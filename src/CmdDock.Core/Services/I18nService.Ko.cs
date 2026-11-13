@@ -251,6 +251,7 @@ public partial class I18nService
         ["MiniDock.SwitchToMini"] = "데스크톱 미니 창으로 전환",
         ["MiniDock.SwitchToMiniShort"] = "미니 창",
         ["MiniDock.ExpandToFull"] = "전체 관리 창으로 펼치기",
+        ["MiniDock.ExpandToFullLogs"] = "전체 실행 로그 보기",
         ["MiniDock.CloseApp"] = "앱 종료",
         ["MiniDock.ModeCard"] = "카드 패널 모드",
         ["MiniDock.ModeBar"] = "컴팩트 독 바 모드",

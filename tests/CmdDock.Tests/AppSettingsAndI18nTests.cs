@@ -339,6 +339,7 @@ public class AppSettingsAndI18nTests
                 // Mini dock keys
                 Assert.NotEmpty(service["MiniDock.Title"]);
                 Assert.NotEmpty(service["MiniDock.SearchPlaceholder"]);
+                Assert.NotEmpty(service["MiniDock.ExpandToFullLogs"]);
 
                 // Settings keys
                 Assert.NotEmpty(service["Settings.Title"]);

@@ -279,13 +279,13 @@ public partial class MainViewModel : ObservableObject
         await RefreshLogsAsync();
         WidgetNotificationService.NotifyWidgets(Commands);
 
-        // Auto-dismiss status badge after 2 seconds
+        // Auto-dismiss status badge after 4 seconds
         var runTimestamp = item.LastRunTime ?? DateTime.UtcNow;
         _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(2000);
+                await Task.Delay(4000);
                 if (item.LastRunTime == runTimestamp)
                 {
                     await _commandService.UpdateExecutionStatusAsync(item.Id, ExecutionStatus.Idle, null, null);

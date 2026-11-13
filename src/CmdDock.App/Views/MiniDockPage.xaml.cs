@@ -376,6 +376,36 @@ public sealed partial class MiniDockPage : Page
         }
     }
 
+    private void CardDeckBackground_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        var original = e.OriginalSource as DependencyObject;
+        while (original != null && !ReferenceEquals(original, sender))
+        {
+            if (original is Control or ItemsControl or ScrollViewer)
+            {
+                return;
+            }
+            original = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(original);
+        }
+
+        Header_PointerPressed(sender, e);
+    }
+
+    private void DockBarBackground_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        var original = e.OriginalSource as DependencyObject;
+        while (original != null && !ReferenceEquals(original, sender))
+        {
+            if (original is Button)
+            {
+                return;
+            }
+            original = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(original);
+        }
+
+        Header_PointerPressed(sender, e);
+    }
+
     private void Header_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         WindowMorphService.Instance.SwitchToFullView();
@@ -727,11 +757,11 @@ public sealed partial class MiniDockPage : Page
         statusItem.LastExitCode = result.ExitCode;
         statusItem.LastRunTime = DateTime.UtcNow;
 
-        // Auto-dismiss status after 2.5 seconds
+        // Auto-dismiss status after 4 seconds
         var runTime = statusItem.LastRunTime;
         _ = Task.Run(async () =>
         {
-            await Task.Delay(2500);
+            await Task.Delay(4000);
             DispatcherQueue.TryEnqueue(() =>
             {
                 if (statusItem.LastRunTime == runTime)
@@ -776,6 +806,25 @@ public sealed partial class MiniDockPage : Page
             {
                 flyout.Items.Add(new MenuFlyoutItem { Text = I18nService.Instance["MiniDock.NoLogs"], IsEnabled = false });
             }
+
+            flyout.Items.Add(new MenuFlyoutSeparator());
+            var viewLogsItem = new MenuFlyoutItem
+            {
+                Text = I18nService.Instance["MiniDock.ExpandToFullLogs"],
+                Icon = new FontIcon { Glyph = "\uE81C", FontSize = 12 }
+            };
+            viewLogsItem.Click += (_, _) =>
+            {
+                WindowMorphService.Instance.SwitchToFullView();
+                App.MainWindowInstance?.DispatcherQueue?.TryEnqueue(() =>
+                {
+                    if (App.MainWindowInstance.Content is MainPage mainPage)
+                    {
+                        mainPage.NavigateToLogs();
+                    }
+                });
+            };
+            flyout.Items.Add(viewLogsItem);
 
             flyout.ShowAt(fe);
         }

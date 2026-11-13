@@ -251,6 +251,7 @@ public partial class I18nService
         ["MiniDock.SwitchToMini"] = "Переключиться в мини-панель",
         ["MiniDock.SwitchToMiniShort"] = "Мини-панель",
         ["MiniDock.ExpandToFull"] = "Развернуть в полное окно управления",
+        ["MiniDock.ExpandToFullLogs"] = "Просмотреть полные журналы выполнения",
         ["MiniDock.CloseApp"] = "Выход из CmdDock",
         ["MiniDock.ModeCard"] = "Режим карточек",
         ["MiniDock.ModeBar"] = "Режим компактного дока",
